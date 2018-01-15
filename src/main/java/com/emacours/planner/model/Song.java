@@ -15,24 +15,30 @@ import java.util.List;
 public class Song {
 
     private final List<Player> players;
-    private final String name;
+    private final String title;
+    private final String author;
 
-    public String getName() {
-        return name;
+    public String getTitle() {
+        return title;
     }
 
-    public Song(String name) {
-        this.name = name;
+    public String getAuthor() {
+        return author;
+    }
+
+    public Song(String title, String author) {
+        this.title = title;
+        this.author = author;
         this.players = new ArrayList<>();
     }
-
+    
     public void addPlayer(Player player) {
         players.add(player);
     }
-    
+
     @Override
     public String toString() {
-        return "Song{" + "players=" + players + ", name=" + name + '}';
+        return "Song{" + "title=" + title + ", author=" + author + "; players=" + players + '}';
     }
-    
+
 }
