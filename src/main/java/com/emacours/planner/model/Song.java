@@ -5,8 +5,9 @@
  */
 package com.emacours.planner.model;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 /**
  *
@@ -20,7 +21,7 @@ public class Song {
     private final String author;
 
     // constraints
-    private final List<Person> players;
+    private final Set<Person> players;
     private Studio preferedStudio = null;
 
     public String getTitle() {
@@ -46,11 +47,19 @@ public class Song {
     public Song(String title, String author) {
         this.title = title;
         this.author = author;
-        this.players = new ArrayList<>();
+        this.players = new HashSet<>();
     }
 
     public void addPlayer(Person player) {
         players.add(player);
+    }
+    
+    public Iterable<Person> getPlayers() {
+        return players;
+    }
+    
+    public boolean containsPlayer(Person player) {
+        return players.contains(player);
     }
 
     public int countConstraint() {
@@ -59,7 +68,7 @@ public class Song {
 
     @Override
     public String toString() {
-        return "Song{" + "title=" + title + ", author=" + author + "; players=" + players + '}';
+        return author;
     }
 
 }

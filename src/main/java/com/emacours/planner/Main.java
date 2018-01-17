@@ -11,16 +11,37 @@ import com.emacours.planner.model.Studio;
 import com.emacours.planner.model.TimeSlot;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.Set;
+import java.util.Stack;
 
 /**
  *
  * @author formation
  */
 public class Main {
+
+    private static class State {
+
+        public final Song[] planning;
+        public final PriorityQueue<Song> tail;
+
+        public State(Song[] planning, PriorityQueue<Song> tail) {
+            this.planning = planning;
+            this.tail = tail;
+        }
+
+        @Override
+        public String toString() {
+            return "State{" + "planning=" + Arrays.toString(planning) + ", tail=" + tail + '}';
+        }
+
+    }
 
     /*
     private static final Instrument BASS = new Instrument("bass");
@@ -58,10 +79,39 @@ public class Main {
     private static final Player DUMMY1_BASS = new Player(DUMMY1, BASS);
     private static final Player DUMMY2_GUITARE = new Player(DUMMY2, GUITARE);
      */
+    private static final Studio STUDIO_A = new Studio("Studio A");
+    private static final Studio STUDIO_B = new Studio("Studio B");
     private static final List<Studio> STUDIOS = new ArrayList<>();
     private static final List<TimeSlot> SLOTS = new ArrayList<>();
+    private static final List<Song> SONGS = new ArrayList<>();
+    private static int DOMAIN_LENGTH;
 
-    private static final void initializeWorld() {
+    private static final Map<Song, Set<Song>> COMPATIBILITY = new HashMap<>();
+
+    private static boolean areCompatible(Song song1, Song song2) {
+        if (song1 == song2) {
+            return false;
+        }
+        for (Person person : song1.getPlayers()) {
+            if (song2.containsPlayer(person)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static void initializeWorld() {
+
+        STUDIOS.add(STUDIO_A);
+        STUDIOS.add(STUDIO_B);
+
+        SLOTS.add(new TimeSlot("14h - 14h45"));
+        SLOTS.add(new TimeSlot("14h45 - 16h"));
+        //SLOTS.add(new TimeSlot("16h - 16h45"));
+
+        DOMAIN_LENGTH = STUDIOS.size() * SLOTS.size();
+
+        LOFO.setPreferedStudio(STUDIO_B);
         LOFO.addPlayer(YANN);
         LOFO.addPlayer(FRED);
         LOFO.addPlayer(STEPH);
@@ -77,73 +127,112 @@ public class Main {
         //RHCP.addPlayer(FRED);
         RHCP.addPlayer(DUMMY1);
 
-        STUDIOS.add(new Studio("Studio A"));
-        STUDIOS.add(new Studio("Studio B"));
+        SONGS.addAll(Arrays.asList(LOFO, OTIS, JMSN, RHCP));
 
-        SLOTS.add(new TimeSlot("14h - 14h45"));
-        SLOTS.add(new TimeSlot("14h45 - 16h"));
-
-    }
-
-    // TODO : to be optimized with a priority queue !
-    public static Song getMaxConstraint(List<Song> songs) {
-        assert songs.size() > 0;
-
-        return songs.stream().max((Song o1, Song o2) -> {
-            if (o1.countConstraint() < o2.countConstraint()) {
-                return -1;
-            } else if (o1.countConstraint() > o2.countConstraint()) {
-                return 1;
-            } else {
-                return 0;
-            }
-        }).orElse(songs.get(0));
-
-    }
-
-    public static void printPlanning(Song[][] planning) {
-        System.out.println("");
-        System.out.println("Planning :");
-        
-        for (int slot = 0; slot < planning.length; slot++) {
-            if (slot > 0) {
-                System.out.println("---------------------------------------------------------------");
-            }
-
-            System.out.print(SLOTS.get(slot).getName());
-            System.out.print(" | ");
-
-            for (int stud = 0; stud < planning[slot].length; stud++) {
-                if (stud > 0) {
-                    System.out.print(" | ");
+        // build compatibility
+        for (Song song1 : SONGS) {
+            Set<Song> set = new HashSet<>();
+            for (Song song2 : SONGS) {
+                if (areCompatible(song1, song2)) {
+                    set.add(song2);
                 }
-                System.out.print(STUDIOS.get(stud).getName());
-                System.out.print("(");
-                System.out.print(planning[slot][stud]);
-                System.out.print(")");
+                COMPATIBILITY.put(song1, set);
             }
-
-            System.out.println("");
         }
-        
-        System.out.println("");
+
+        System.out.println(COMPATIBILITY);
+
+    }
+
+    private static final Comparator<Song> MIN_CONSTRAINT_SONG = (Song o1, Song o2) -> {
+        if (o1.countConstraint() < o2.countConstraint()) {
+            return -1;
+        } else if (o1.countConstraint() > o2.countConstraint()) {
+            return 1;
+        } else {
+            return 0;
+        }
+    };
+
+    //public static final 
+    public static boolean checkConstraints(Song[] planning, Song song, int position) {
+        // check slot is free
+        if (planning[position] != null) {
+            return false;
+        }
+
+        // check prefered studio
+        Studio studio = STUDIOS.get(position % STUDIOS.size());
+        int slot = position / STUDIOS.size();
+
+        if (song.hasPreferedStudio() && song.getPreferedStudio() != studio) {
+            return false;
+        }
+
+        // check player set compatibility
+        int studioFrom = slot * STUDIOS.size();
+        int studioTo = (slot + 1) * STUDIOS.size();
+        Set<Song> compatibleSongs = COMPATIBILITY.get(song);
+
+        for (int s = studioFrom; s < studioTo; s++) {
+            Song checkSong = planning[s];
+            if (checkSong != null && !compatibleSongs.contains(checkSong)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public static int getNextHypothesis(Song[] planning, Song song) {
+        for (int p = 0; p < planning.length; p++) {
+            if (planning[p] == null && checkConstraints(planning, song, p)) {
+                return p;
+            }
+        }
+        return -1;
     }
 
     public static void main(String[] args) {
         initializeWorld();
 
-        LinkedList<Song> remainingSong = new LinkedList<>();
-        remainingSong.addAll(Arrays.asList(LOFO, OTIS, JMSN, RHCP));
+        Stack<State> stack = new Stack<>();
 
-        Song[][] planning = new Song[SLOTS.size()][STUDIOS.size()];
+        PriorityQueue<Song> initialList = new PriorityQueue<>(MIN_CONSTRAINT_SONG);
+        initialList.addAll(SONGS);
 
-        printPlanning(planning);
+        stack.push(new State(new Song[DOMAIN_LENGTH], initialList));
 
-        while (!remainingSong.isEmpty()) {
-            Song candidate = getMaxConstraint(remainingSong);
-            remainingSong.remove(candidate);
-            System.out.println(candidate);
+        int count = 0;
+        while (!stack.isEmpty()) {
+            State state = stack.pop();
+            PriorityQueue<Song> pq = new PriorityQueue<>(state.tail);
+            System.out.println("Visite: " + state);
+            if (state.tail.isEmpty()) {
+                System.out.println("Found solution in [" + count + "] steps : " + state);
+                return;
+            }
+            count++;
+
+            while (!pq.isEmpty()) {
+                Song song = pq.poll();
+
+                int h = getNextHypothesis(state.planning, song);
+                if (h != -1) {
+                    Song[] planning = state.planning.clone();
+                    planning[h] = song;
+                    PriorityQueue<Song> newPq = new PriorityQueue<>(state.tail);
+                    newPq.remove(song);
+
+                    stack.push(new State(planning, newPq));
+                }
+
+            }
+
         }
+
+        System.out.println("No solution found ! ");
+
     }
 
 }
