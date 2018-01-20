@@ -5,33 +5,39 @@
  */
 package com.emacours.planner.model;
 
+import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Root;
+
 /**
  *
  * @author formation
  */
+@Root()
 public class Player {
 
-    private final Person player;
-    private final Instrument instrument;
+    @Attribute
+    private final String firstName;
+    @Attribute
+    private final String lastName;
 
-    public Person getPlayer() {
-        return player;
+    public String getFirstName() {
+        return firstName;
     }
 
-    public Instrument getInstrument() {
-        return instrument;
+    public String getLastName() {
+        return lastName;
     }
 
-    public Player(Person player, Instrument instrument) {
-        this.player = player;
-        this.instrument = instrument;
+    public Player(String firstName, String lastName) {
+        this.firstName = firstName;
+        this.lastName = lastName;
     }
 
     @Override
     public String toString() {
-        return "Player{" + "player=" + player + ", instrument=" + instrument + '}';
+        return "Person{" + "firstName=" + firstName + ", lastName=" + lastName + '}';
     }
+    
+    
 
-    
-    
 }

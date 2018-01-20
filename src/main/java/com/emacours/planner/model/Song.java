@@ -5,9 +5,12 @@
  */
 package com.emacours.planner.model;
 
+import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.List;
+import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
 
 /**
  *
@@ -15,13 +18,17 @@ import java.util.Set;
  */
 public class Song {
 
-    public static final int STUDIO_CONSTRAINT_VALUE = 5;
+    public static final int STUDIO_CONSTRAINT_VALUE = 10;
     
+    @Attribute
     private final String title;
+    @Attribute
     private final String author;
 
     // constraints
-    private final Set<Person> players;
+    @ElementList(inline = true)
+    private final List<InstrumentPlayer> instrumentPlayers;
+    @Element(required = false)
     private Studio preferedStudio = null;
 
     public String getTitle() {
@@ -47,23 +54,19 @@ public class Song {
     public Song(String title, String author) {
         this.title = title;
         this.author = author;
-        this.players = new HashSet<>();
+        this.instrumentPlayers = new ArrayList<>();
     }
 
-    public void addPlayer(Person player) {
-        players.add(player);
+    public void addPlayer(InstrumentPlayer player) {
+        instrumentPlayers.add(player);
     }
     
-    public Iterable<Person> getPlayers() {
-        return players;
-    }
-    
-    public boolean containsPlayer(Person player) {
-        return players.contains(player);
+    public List<InstrumentPlayer> getPlayers() {
+        return instrumentPlayers;
     }
 
     public int countConstraint() {
-        return players.size() + (hasPreferedStudio() ? STUDIO_CONSTRAINT_VALUE : 0);
+        return instrumentPlayers.size() + (hasPreferedStudio() ? STUDIO_CONSTRAINT_VALUE : 0);
     }
 
     @Override

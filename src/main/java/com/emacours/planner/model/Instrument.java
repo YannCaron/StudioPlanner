@@ -5,12 +5,15 @@
  */
 package com.emacours.planner.model;
 
+import org.simpleframework.xml.Attribute;
+
 /**
  *
  * @author formation
  */
 public class Instrument {
 
+    @Attribute
     private final String name;
 
     public String getName() {

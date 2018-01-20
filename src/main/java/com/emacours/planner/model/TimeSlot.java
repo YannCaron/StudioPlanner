@@ -5,12 +5,15 @@
  */
 package com.emacours.planner.model;
 
+import org.simpleframework.xml.Attribute;
+
 /**
  *
  * @author formation
  */
 public class TimeSlot {
 
+    @Attribute
     private final String name;
 
     public String getName() {
@@ -19,6 +22,11 @@ public class TimeSlot {
 
     public TimeSlot(String name) {
         this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return "TimeSlot{" + "name=" + name + '}';
     }
 
 }
