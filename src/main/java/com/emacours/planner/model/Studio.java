@@ -7,16 +7,13 @@ package com.emacours.planner.model;
 
 import javafx.beans.property.SimpleStringProperty;
 import org.simpleframework.xml.Attribute;
-import org.simpleframework.xml.Default;
-import org.simpleframework.xml.DefaultType;
 import org.simpleframework.xml.Root;
 
 /**
  *
  * @author formation
  */
-@Root
-@Default(DefaultType.PROPERTY)
+@Root(strict=false)
 public class Studio {
 
     private final SimpleStringProperty name;
@@ -31,7 +28,11 @@ public class Studio {
         this.name.set(name);
     }
 
-    public Studio(String Name) {
+    public SimpleStringProperty getNameProperty() {
+        return name;
+    }
+    
+    public Studio(@Attribute (name = "name") String Name) {
         this.name = new SimpleStringProperty(Name);
     }
 

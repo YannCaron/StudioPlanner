@@ -7,7 +7,6 @@ package com.emacours.planner.algorithm;
 
 import com.emacours.planner.model.DataModel;
 import com.emacours.planner.model.Song;
-import com.emacours.planner.model.Studio;
 import java.util.Arrays;
 
 /**
@@ -62,7 +61,8 @@ public class Planning {
             } 
             
             if (s == 0) {
-                sb.append(model.getSlots().get(t).getName());
+                sb.append("Slot ");
+                sb.append(t);
                 sb.append("\t| ");
             } else {
                 sb.append(", ");

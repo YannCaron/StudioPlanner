@@ -5,11 +5,16 @@
  */
 package com.emacours.planner.model;
 
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
@@ -21,14 +26,13 @@ import org.simpleframework.xml.strategy.Strategy;
  *
  * @author cyann
  */
-@Root
+@Root(strict = false)
 public class DataModel {
 
     @ElementList(inline = true)
     private ObservableList<Studio> studios;
 
-    @ElementList(inline = true)
-    private List<TimeSlot> slots;
+    private final SimpleIntegerProperty maxSlotProperty;
 
     @ElementList(inline = true)
     private List<Player> players;
@@ -46,8 +50,18 @@ public class DataModel {
         return studios;
     }
 
-    public List<TimeSlot> getSlots() {
-        return slots;
+    @Element
+    public int getMaxSlot() {
+        return maxSlotProperty.get();
+    }
+
+    @Element
+    public void setMaxSlot(int maxSlot) {
+        this.maxSlotProperty.set(maxSlot);
+    }
+
+    public SimpleIntegerProperty getMaxSlotProperty() {
+        return maxSlotProperty;
     }
 
     public List<Player> getPlayers() {
@@ -68,7 +82,7 @@ public class DataModel {
 
     public DataModel() {
         studios = FXCollections.observableArrayList();
-        slots = new ArrayList<>();
+        maxSlotProperty = new SimpleIntegerProperty();
         players = new ArrayList<>();
         instruments = new ArrayList<>();
         instrumentPlayers = new ArrayList<>();
@@ -76,9 +90,9 @@ public class DataModel {
     }
 
     public int getDomainSize() {
-        return studios.size() + slots.size();
+        return studios.size() + getMaxSlot();
     }
-    
+
     public int getStudioDomainSize() {
         return studios.size();
     }
@@ -89,9 +103,6 @@ public class DataModel {
 
         Studio studioA = new Studio("A");
         Studio studioB = new Studio("B");
-
-        TimeSlot slot1 = new TimeSlot("Slot 1 (14h - 14h45)");
-        TimeSlot slot2 = new TimeSlot("Slot 2 (14h45 - 15h30)");
 
         Instrument bass = new Instrument("bass");
         Instrument guitare = new Instrument("guitare");
@@ -146,13 +157,25 @@ public class DataModel {
 
         // DataModel
         dataModel.getStudios().addAll(Arrays.asList(studioA, studioB));
-        dataModel.getSlots().addAll(Arrays.asList(slot1, slot2));
         dataModel.getInstruments().addAll(Arrays.asList(bass, guitare, voide, drum, percusion));
         dataModel.getPlayers().addAll(Arrays.asList(steph, fred, yann, estelle, lionel, dummy1, dummy2));
         dataModel.getInstrumentPlayers().addAll(Arrays.asList(stephDrum, stephPercusion, fredGuitare, fredVoice, fredDrum, yannBass, yannVoice, lionelBass, estelleVoice, dummy1Bass, dummy2Guitare));
         dataModel.getSongs().addAll(Arrays.asList(lofo, otis, jmsn, rhcp));
 
         return dataModel;
+    }
+
+    public String toXML() {
+        Strategy strategy = new CycleStrategy("_id", "_ref");
+        Serializer serializer = new Persister(strategy);
+        StringWriter sw = new StringWriter();
+        try {
+            serializer.write(this, sw);
+            sw.flush();
+        } catch (Exception ex) {
+            Logger.getLogger(DataModel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return sw.toString();
     }
 
     // generate XML
