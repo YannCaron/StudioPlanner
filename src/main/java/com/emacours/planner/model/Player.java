@@ -13,7 +13,7 @@ import org.simpleframework.xml.Root;
  *
  * @author formation
  */
-@Root(strict=false)
+@Root(strict = false)
 
 public class Player {
 
@@ -47,17 +47,19 @@ public class Player {
     public SimpleStringProperty getLastNameProperty() {
         return lastNameProperty;
     }
-    
-    
 
-    public Player(@Attribute (name = "firstName") String firstName, @Attribute (name = "lastName") String lastName) {
+    public Player(@Attribute(name = "firstName") String firstName, @Attribute(name = "lastName") String lastName) {
         this.firstNameProperty = new SimpleStringProperty(firstName);
         this.lastNameProperty = new SimpleStringProperty(lastName);
     }
 
     @Override
     public String toString() {
-        return "Player{" + "firstName=" + firstNameProperty.get() + ", lastName=" + lastNameProperty.get() + '}';
+        if (!"".equals(lastNameProperty.get())) {
+            return firstNameProperty.get() + " " + lastNameProperty.get();
+        } else {
+            return firstNameProperty.get();
+        }
     }
 
 }

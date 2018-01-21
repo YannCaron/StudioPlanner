@@ -38,7 +38,7 @@ public class Studio {
 
     @Override
     public String toString() {
-        return "Studio{" + "Name=" + nameProperty.get() + '}';
+        return nameProperty.get();
     }
 
 }

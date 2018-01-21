@@ -5,7 +5,7 @@
  */
 package com.emacours.planner.algorithm;
 
-import com.emacours.planner.model.InstrumentPlayer;
+import com.emacours.planner.model.Player;
 import com.emacours.planner.model.Song;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -44,9 +44,9 @@ public class CompatibilityGraph {
         if (song1 == song2) {
             return false;
         }
-        for (InstrumentPlayer instrumentPlayer1 : song1.getPlayers()) {
-            for (InstrumentPlayer instrumentPlayer2 : song2.getPlayers()) {
-                if (instrumentPlayer1.getPlayer() == instrumentPlayer2.getPlayer()) {
+        for (Player player1 : song1.getPlayers()) {
+            for (Player player2 : song2.getPlayers()) {
+                if (player1 == player2) {
                     return false;
                 }
             }
@@ -58,7 +58,7 @@ public class CompatibilityGraph {
         if (!graph.containsKey(song1)) {
             return false;
         }
-        
+
         return graph.get(song1).contains(song2);
     }
 

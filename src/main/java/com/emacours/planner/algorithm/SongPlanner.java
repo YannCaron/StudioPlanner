@@ -76,16 +76,16 @@ public class SongPlanner {
 
     public void compute() {
         stack.clear();
+        model.getSongs().forEach((e) -> System.out.println("Priority " + e.countConstraint()));
 
         MinConstrainingSongPQ initialList = new MinConstrainingSongPQ(model.getSongs());
 
         stack.push(new State(new Song[model.getDomainSize()], initialList));
-
-        next();
     }
 
     public void next() {
         int count = 0;
+
         while (!stack.isEmpty()) {
             State state = stack.pop();
             PriorityQueue<Song> pq = new PriorityQueue<>(state.tail);
@@ -120,6 +120,7 @@ public class SongPlanner {
         }
 
         this.isOver = true;
+        System.out.println("No more solution found!");
     }
 
 }

@@ -5,6 +5,7 @@
  */
 package com.emacours.planner;
 
+import com.emacours.planner.algorithm.SongPlanner;
 import com.emacours.planner.model.DataModel;
 import com.emacours.planner.model.Instrument;
 import com.emacours.planner.model.Player;
@@ -12,6 +13,7 @@ import com.emacours.planner.model.Song;
 import com.emacours.planner.model.Studio;
 import java.io.File;
 import java.net.URL;
+import java.util.Comparator;
 import java.util.ResourceBundle;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -20,6 +22,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener.Change;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -27,15 +31,15 @@ import javafx.scene.control.Accordion;
 import javafx.scene.control.Button;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
-import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.control.cell.TextFieldTableCell;
-import javafx.util.Callback;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
+import org.simpleframework.xml.strategy.CycleStrategy;
+import org.simpleframework.xml.strategy.Strategy;
 
 /**
  *
@@ -99,11 +103,13 @@ public class PlannerControler implements Initializable {
 
     public PlannerControler() {
 
-        Serializer serializer = new Persister();
+        Strategy strategy = new CycleStrategy("_id", "_ref");
+        Serializer serializer = new Persister(strategy);
         File source = new File("studio.xml");
 
         try {
             model = serializer.read(DataModel.class, source);
+            System.out.println(model);
         } catch (Exception ex) {
             Logger.getLogger(PlannerControler.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -117,19 +123,26 @@ public class PlannerControler implements Initializable {
         slotSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 10, 5));
         slotSpinner.getValueFactory().valueProperty().bindBidirectional(model.getMaxSlotProperty());
 
-        ///durationSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(15, 240, 45, 15));
         runButton.setOnMouseClicked((event) -> {
-            System.out.println(model.getSongs().get(0));
-            System.out.println(model.toXML());
-/*
-            Serializer serializer = new Persister();
-            File result = new File("studio.xml");
+
+            //System.out.println(model.toXML());
 
             try {
+                Strategy strategy = new CycleStrategy("_id", "_ref");
+                Serializer serializer = new Persister(strategy);
+                File result = new File("studio.xml");
                 serializer.write(model, result);
             } catch (Exception ex) {
                 Logger.getLogger(PlannerControler.class.getName()).log(Level.SEVERE, null, ex);
-            }*/
+            }
+
+            SongPlanner planner = new SongPlanner(model);
+            planner.compute();
+            
+            if (planner.hasNext()) {
+                planner.next();
+            }
+            
         });
 
         // studio
@@ -161,9 +174,38 @@ public class PlannerControler implements Initializable {
         songTable.setEditable(true);
         addEditableStringTableColumn("Name", songTable, (t) -> t.getNameProperty(), (t, v) -> t.setName(v));
         addEditableObjectTableColumn("Prefered studio", songTable, model.getStudios(), (t) -> t.getPreferedStudioProperty(), (t, v) -> t.setPreferedStudio(v));
+        for (Instrument instrument : model.getInstruments()) {
+            addEditableObjectTableColumn(instrument.getName(), songTable, model.getPlayers(), (t) -> t.getPlayerProperty(instrument), (t, v) -> t.addPlayer(instrument, v));
+        }
+        addEditableStringTableColumn("Remark", songTable, (t) -> t.getCommentProperty(), (t, v) -> t.setComment(v));
+
         songTable.setItems(model.getSongs());
 
-        assignDataAdd(addSongButton, model.getSongs(), () -> new Song("new", null));
+        songTable.setOnKeyPressed((event) -> {
+            if (songTable.getSelectionModel().getSelectedCells().size() <= 0) {
+                return;
+            }
+            int row = songTable.getSelectionModel().getSelectedCells().get(0).getRow();
+            int col = songTable.getSelectionModel().getSelectedCells().get(0).getColumn();
+            if (col == 1) {
+                songTable.getItems().get(row).setPreferedStudio(null);
+            }
+        });
+
+        model.getInstruments().addListener((Change<? extends Instrument> c) -> {
+            while (c.next()) {
+                for (Instrument instrument : c.getAddedSubList()) {
+                    addEditableObjectTableColumn(instrument.getName(), songTable, model.getPlayers(), (t) -> t.getPlayerProperty(instrument), (t, v) -> t.addPlayer(instrument, v));
+                }
+
+                for (Instrument instrument : c.getRemoved()) {
+                }
+
+                System.out.println(c.getAddedSubList());
+            }
+        });
+
+        assignDataAdd(addSongButton, model.getSongs(), () -> new Song("new"));
         assignDataDelete(deleteSongButton, model.getSongs(), songTable.getSelectionModel());
 
     }
@@ -186,14 +228,23 @@ public class PlannerControler implements Initializable {
         tableView.getColumns().add(column);
     }
 
+    private <U> ObservableList<U> optionalList(ObservableList<U> list) {
+        ObservableList<U> newList = FXCollections.observableArrayList();
+        newList.add(null);
+        newList.addAll(list);
+        return newList;
+    }
+
     private <T, U> void addEditableObjectTableColumn(String columnName, TableView<T> tableView, ObservableList<U> list,
             Function<T, SimpleObjectProperty<U>> propertyAccessor,
-            BiConsumer<T, U> propertySetter) {
+            BiConsumer<T, U> propertySetter/*,
+            Comparator<U> comparator*/) {
 
         TableColumn<T, U> column = new TableColumn(columnName);
         column.setMinWidth(100);
         column.setEditable(true);
         column.setCellValueFactory(cellData -> propertyAccessor.apply(cellData.getValue()));
+        //FXCollections.sort(list, comparator);
         column.setCellFactory(ComboBoxTableCell.forTableColumn(list));
         column.setOnEditCommit(
                 (TableColumn.CellEditEvent<T, U> t) -> {

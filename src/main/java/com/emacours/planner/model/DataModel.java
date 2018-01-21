@@ -6,9 +6,7 @@
 package com.emacours.planner.model;
 
 import java.io.StringWriter;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -41,9 +39,6 @@ public class DataModel {
     private ObservableList<Instrument> instruments;
 
     @ElementList(inline = true, required = false)
-    private List<InstrumentPlayer> instrumentPlayers;
-
-    @ElementList(inline = true, required = false)
     private ObservableList<Song> songs;
 
     public ObservableList<Studio> getStudios() {
@@ -72,10 +67,6 @@ public class DataModel {
         return instruments;
     }
 
-    public List<InstrumentPlayer> getInstrumentPlayers() {
-        return instrumentPlayers;
-    }
-
     public ObservableList<Song> getSongs() {
         return songs;
     }
@@ -85,12 +76,11 @@ public class DataModel {
         maxSlotProperty = new SimpleIntegerProperty();
         players = FXCollections.observableArrayList();
         instruments = FXCollections.observableArrayList();
-        instrumentPlayers = new ArrayList<>();
         songs = FXCollections.observableArrayList();
     }
 
     public int getDomainSize() {
-        return studios.size() + getMaxSlot();
+        return studios.size() * getMaxSlot();
     }
 
     public int getStudioDomainSize() {
@@ -103,10 +93,11 @@ public class DataModel {
 
         Studio studioA = new Studio("A");
         Studio studioB = new Studio("B");
+        dataModel.setMaxSlot(2);
 
         Instrument bass = new Instrument("bass");
         Instrument guitare = new Instrument("guitare");
-        Instrument voide = new Instrument("voice");
+        Instrument voice = new Instrument("voice");
         Instrument drum = new Instrument("drum");
         Instrument percusion = new Instrument("percusion");
 
@@ -118,18 +109,6 @@ public class DataModel {
         Player dummy1 = new Player("Dummy 1", "");
         Player dummy2 = new Player("Dummy 2", "");
 
-        InstrumentPlayer stephDrum = new InstrumentPlayer(steph, drum);
-        InstrumentPlayer stephPercusion = new InstrumentPlayer(steph, percusion);
-        InstrumentPlayer fredGuitare = new InstrumentPlayer(fred, guitare);
-        InstrumentPlayer fredVoice = new InstrumentPlayer(fred, voide);
-        InstrumentPlayer fredDrum = new InstrumentPlayer(fred, drum);
-        InstrumentPlayer yannBass = new InstrumentPlayer(yann, bass);
-        InstrumentPlayer yannVoice = new InstrumentPlayer(yann, voide);
-        InstrumentPlayer lionelBass = new InstrumentPlayer(lionel, bass);
-        InstrumentPlayer estelleVoice = new InstrumentPlayer(estelle, voide);
-        InstrumentPlayer dummy1Bass = new InstrumentPlayer(dummy1, bass);
-        InstrumentPlayer dummy2Guitare = new InstrumentPlayer(dummy2, guitare);
-
         Song mJhones = new Song("Mr Johns");
         Song otis = new Song("Otis Reading");
         Song melody = new Song("Melody Garbot");
@@ -140,26 +119,25 @@ public class DataModel {
         Song rhcp = new Song("Red Hot Chili Pepers");
 
         lofo.setPreferedStudio(studioB);
-        lofo.addPlayer(yannVoice);
-        lofo.addPlayer(fredGuitare);
-        lofo.addPlayer(stephPercusion);
-        lofo.addPlayer(dummy1Bass);
-        lofo.addPlayer(dummy2Guitare);
+        lofo.addPlayer(voice, yann);
+        lofo.addPlayer(guitare, fred);
+        lofo.addPlayer(percusion, steph);
+        lofo.addPlayer(bass, dummy1);
+        lofo.addPlayer(guitare, dummy2);
 
-        otis.addPlayer(fredGuitare);
-        otis.addPlayer(yannBass);
+        otis.addPlayer(guitare, fred);
+        otis.addPlayer(bass, yann);
 
-        jmsn.addPlayer(lionelBass);
-        jmsn.addPlayer(estelleVoice);
+        jmsn.addPlayer(bass, lionel);
+        jmsn.addPlayer(voice, estelle);
 
         //RHCP.addPlayer(FRED);
-        rhcp.addPlayer(dummy1Bass);
+        rhcp.addPlayer(bass, dummy1);
 
         // DataModel
         dataModel.getStudios().addAll(Arrays.asList(studioA, studioB));
-        dataModel.getInstruments().addAll(Arrays.asList(bass, guitare, voide, drum, percusion));
+        dataModel.getInstruments().addAll(Arrays.asList(bass, guitare, voice, drum, percusion));
         dataModel.getPlayers().addAll(Arrays.asList(steph, fred, yann, estelle, lionel, dummy1, dummy2));
-        dataModel.getInstrumentPlayers().addAll(Arrays.asList(stephDrum, stephPercusion, fredGuitare, fredVoice, fredDrum, yannBass, yannVoice, lionelBass, estelleVoice, dummy1Bass, dummy2Guitare));
         dataModel.getSongs().addAll(Arrays.asList(lofo, otis, jmsn, rhcp));
 
         return dataModel;

@@ -3,3 +3,4 @@
 4h - Datamodel bis
 2h - FXML
 2h - FXML bis
+3h - TableView
