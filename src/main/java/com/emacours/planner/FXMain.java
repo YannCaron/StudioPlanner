@@ -9,14 +9,10 @@ package com.emacours.planner;
 import java.io.IOException;
 import javafx.application.Application;
 import static javafx.application.Application.launch;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.image.Image;
-import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
 /**
@@ -34,8 +30,8 @@ public class FXMain extends Application {
         primaryStage.setTitle("Studio Planner");
         /*primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/icon-16.png")));
         primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/icon-32.png")));
-        primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/icon-64.png")));
-        primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/icon-128.png")));*/
+        primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/icon-64.png")));*/
+        primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/icon-128.png")));
         primaryStage.setScene(new Scene(root));
         primaryStage.show();
 

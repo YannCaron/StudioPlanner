@@ -5,28 +5,40 @@
  */
 package com.emacours.planner.model;
 
+import javafx.beans.property.SimpleStringProperty;
 import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Root;
 
 /**
  *
  * @author formation
  */
+@Root(strict=false)
 public class Instrument {
 
-    @Attribute
-    private final String name;
+    private SimpleStringProperty nameProperty;
 
+    @Attribute(required = true)
     public String getName() {
-        return name;
+        return nameProperty.get();
     }
 
-    public Instrument(String name) {
-        this.name = name;
+    @Attribute(required = true)
+    public void setName(String name) {
+        this.nameProperty.set(name);
+    }
+
+    public SimpleStringProperty getNameProperty() {
+        return nameProperty;
+    }
+
+    public Instrument(@Attribute (name = "name") String name) {
+        this.nameProperty = new SimpleStringProperty(name);
     }
 
     @Override
     public String toString() {
-        return "Instrument{" + "name=" + name + '}';
+        return "Instrument{" + "name=" + nameProperty.get() + '}';
     }
 
 }

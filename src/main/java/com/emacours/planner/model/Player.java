@@ -5,6 +5,7 @@
  */
 package com.emacours.planner.model;
 
+import javafx.beans.property.SimpleStringProperty;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Root;
 
@@ -12,32 +13,51 @@ import org.simpleframework.xml.Root;
  *
  * @author formation
  */
-@Root()
+@Root(strict=false)
+
 public class Player {
 
-    @Attribute
-    private final String firstName;
-    @Attribute
-    private final String lastName;
+    private final SimpleStringProperty firstNameProperty;
+    private final SimpleStringProperty lastNameProperty;
 
+    @Attribute(required = true)
     public String getFirstName() {
-        return firstName;
+        return firstNameProperty.get();
     }
 
+    @Attribute(required = true)
+    public void setFirstName(String firstName) {
+        this.firstNameProperty.set(firstName);
+    }
+
+    @Attribute(required = true)
     public String getLastName() {
-        return lastName;
+        return lastNameProperty.get();
     }
 
-    public Player(String firstName, String lastName) {
-        this.firstName = firstName;
-        this.lastName = lastName;
+    @Attribute(required = true)
+    public void setLastName(String lastName) {
+        this.lastNameProperty.set(lastName);
+    }
+
+    public SimpleStringProperty getFirstNameProperty() {
+        return firstNameProperty;
+    }
+
+    public SimpleStringProperty getLastNameProperty() {
+        return lastNameProperty;
+    }
+    
+    
+
+    public Player(@Attribute (name = "firstName") String firstName, @Attribute (name = "lastName") String lastName) {
+        this.firstNameProperty = new SimpleStringProperty(firstName);
+        this.lastNameProperty = new SimpleStringProperty(lastName);
     }
 
     @Override
     public String toString() {
-        return "Person{" + "firstName=" + firstName + ", lastName=" + lastName + '}';
+        return "Player{" + "firstName=" + firstNameProperty.get() + ", lastName=" + lastNameProperty.get() + '}';
     }
-    
-    
 
 }

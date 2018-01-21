@@ -1,0 +1,43 @@
+<dataModel>
+   <studio name="Batterie"/>
+   <studio name="Studio B"/>
+   <studio name="Studio C"/>
+   <player lastName="" firstName="Alexis"/>
+   <player lastName="" firstName="Antoine"/>
+   <player lastName="" firstName="Beni"/>
+   <player lastName="" firstName="Damien"/>
+   <player lastName="" firstName="Daniel"/>
+   <player lastName="" firstName="Emma"/>
+   <player lastName="" firstName="Eric"/>
+   <player lastName="" firstName="Estelle"/>
+   <player lastName="" firstName="Fiona"/>
+   <player lastName="" firstName="Fred"/>
+   <player lastName="" firstName="Gaël"/>
+   <player lastName="Bonet" firstName="Guillaume"/>
+   <player lastName="" firstName="Hugo"/>
+   <player lastName="" firstName="Justine"/>
+   <player lastName="Hevry" firstName="Loïc"/>
+   <player lastName="" firstName="Margo + Nina"/>
+   <player lastName="" firstName="Niel"/>
+   <player lastName="" firstName="Noeline"/>
+   <player lastName="Debise" firstName="Pascal"/>
+   <player lastName="" firstName="Patrick"/>
+   <player lastName="" firstName="Rafaël"/>
+   <player lastName="" firstName="Vladimir"/>
+   <player lastName="Caron" firstName="Yann"/>
+   <player lastName="" firstName="Yohann"/>
+   <player lastName="Rollin" firstName="Tirouan"/>
+   <player lastName="Vigna" firstName="Lisa"/>
+   <player lastName="" firstName="Sylvie"/>
+   <player lastName="C." firstName="Rose"/>
+   <player lastName="" firstName="Camille"/>
+   <player lastName="" firstName="Véronique"/>
+   <instrument name="Batterie"/>
+   <instrument name="Basse"/>
+   <instrument name="Guitare 1"/>
+   <instrument name="Guitare 2"/>
+   <instrument name="Clavier / Piano"/>
+   <instrument name="Lead chant"/>
+   <instrument name="Chant 2 / choeurs"/>
+   <maxSlot>6</maxSlot>
+</dataModel>

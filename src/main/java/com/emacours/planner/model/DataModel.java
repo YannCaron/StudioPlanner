@@ -29,22 +29,22 @@ import org.simpleframework.xml.strategy.Strategy;
 @Root(strict = false)
 public class DataModel {
 
-    @ElementList(inline = true)
+    @ElementList(inline = true, required = false)
     private ObservableList<Studio> studios;
 
     private final SimpleIntegerProperty maxSlotProperty;
 
-    @ElementList(inline = true)
-    private List<Player> players;
+    @ElementList(inline = true, required = false)
+    private ObservableList<Player> players;
 
-    @ElementList(inline = true)
-    private List<Instrument> instruments;
+    @ElementList(inline = true, required = false)
+    private ObservableList<Instrument> instruments;
 
-    @ElementList(inline = true)
+    @ElementList(inline = true, required = false)
     private List<InstrumentPlayer> instrumentPlayers;
 
-    @ElementList(inline = true)
-    private List<Song> songs;
+    @ElementList(inline = true, required = false)
+    private ObservableList<Song> songs;
 
     public ObservableList<Studio> getStudios() {
         return studios;
@@ -64,11 +64,11 @@ public class DataModel {
         return maxSlotProperty;
     }
 
-    public List<Player> getPlayers() {
+    public ObservableList<Player> getPlayers() {
         return players;
     }
 
-    public List<Instrument> getInstruments() {
+    public ObservableList<Instrument> getInstruments() {
         return instruments;
     }
 
@@ -76,17 +76,17 @@ public class DataModel {
         return instrumentPlayers;
     }
 
-    public List<Song> getSongs() {
+    public ObservableList<Song> getSongs() {
         return songs;
     }
 
     public DataModel() {
         studios = FXCollections.observableArrayList();
         maxSlotProperty = new SimpleIntegerProperty();
-        players = new ArrayList<>();
-        instruments = new ArrayList<>();
+        players = FXCollections.observableArrayList();
+        instruments = FXCollections.observableArrayList();
         instrumentPlayers = new ArrayList<>();
-        songs = new ArrayList<>();
+        songs = FXCollections.observableArrayList();
     }
 
     public int getDomainSize() {
@@ -130,14 +130,14 @@ public class DataModel {
         InstrumentPlayer dummy1Bass = new InstrumentPlayer(dummy1, bass);
         InstrumentPlayer dummy2Guitare = new InstrumentPlayer(dummy2, guitare);
 
-        Song mJhones = new Song("Mr Johns", "Counting crows");
-        Song otis = new Song("Hard to handle", "Otis Reading");
-        Song melody = new Song("Who will comfort me", "Melody Garbot");
-        Song lofo = new Song("Le fond et la forme", "Lofofora");
-        Song jmsn = new Song("Drinkin", "JMSN");
-        Song jamiroquai = new Song("Time won't wait", "Jamiroquai");
-        Song elbow = new Song("Magnificient", "Elbow");
-        Song rhcp = new Song("Parallele Universe", "Red Hot Chili Pepers");
+        Song mJhones = new Song("Mr Johns");
+        Song otis = new Song("Otis Reading");
+        Song melody = new Song("Melody Garbot");
+        Song lofo = new Song("Lofofora");
+        Song jmsn = new Song("JMSN");
+        Song jamiroquai = new Song("Jamiroquai");
+        Song elbow = new Song("Elbow");
+        Song rhcp = new Song("Red Hot Chili Pepers");
 
         lofo.setPreferedStudio(studioB);
         lofo.addPlayer(yannVoice);

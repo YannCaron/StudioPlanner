@@ -16,29 +16,29 @@ import org.simpleframework.xml.Root;
 @Root(strict=false)
 public class Studio {
 
-    private final SimpleStringProperty name;
+    private final SimpleStringProperty nameProperty;
 
     @Attribute(required = true)
     public String getName() {
-        return name.get();
+        return nameProperty.get();
     }
 
     @Attribute(required = true)
     public void setName(String name) {
-        this.name.set(name);
+        this.nameProperty.set(name);
     }
 
     public SimpleStringProperty getNameProperty() {
-        return name;
+        return nameProperty;
     }
     
     public Studio(@Attribute (name = "name") String Name) {
-        this.name = new SimpleStringProperty(Name);
+        this.nameProperty = new SimpleStringProperty(Name);
     }
 
     @Override
     public String toString() {
-        return "Studio{" + "Name=" + name.get() + '}';
+        return "Studio{" + "Name=" + nameProperty.get() + '}';
     }
 
 }

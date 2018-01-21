@@ -6,26 +6,36 @@
 package com.emacours.planner;
 
 import com.emacours.planner.model.DataModel;
+import com.emacours.planner.model.Instrument;
+import com.emacours.planner.model.Player;
+import com.emacours.planner.model.Song;
 import com.emacours.planner.model.Studio;
+import java.io.File;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.logging.Level;
 import java.util.logging.Logger;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Accordion;
 import javafx.scene.control.Button;
-import javafx.scene.control.DatePicker;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TitledPane;
+import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.util.Callback;
+import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.core.Persister;
 
 /**
  *
@@ -37,100 +47,173 @@ public class PlannerControler implements Initializable {
     DataModel model;
 
     @FXML
-    public TableView<Studio> studioTable;
+    private TableView<Studio> studioTable;
 
     @FXML
-    public Spinner slotSpinner;
+    private Button addStudioButton;
 
     @FXML
-    public Spinner durationSpinner;
+    private Button deleteStudioButton;
 
     @FXML
-    public Button runButton;
+    private TableView<Instrument> instrumentTable;
+
+    @FXML
+    private Button addInstrumentButton;
+
+    @FXML
+    private Button deleteInstrumentButton;
+
+    @FXML
+    private TableView<Player> playerTable;
+
+    @FXML
+    private Button addPlayerButton;
+
+    @FXML
+    private Button deletePlayerButton;
+
+    @FXML
+    private TableView<Song> songTable;
+
+    @FXML
+    private Button addSongButton;
+
+    @FXML
+    private Button deleteSongButton;
+
+    @FXML
+    private Spinner slotSpinner;
+
+    @FXML
+    private Spinner durationSpinner;
+
+    @FXML
+    private Button runButton;
 
     @FXML
     private Accordion accord;
 
     @FXML
-    private TitledPane studioPane, studentPane;
+    private TitledPane studioPane, playerPane;
 
     public PlannerControler() {
-        model = new DataModel();
-        model.getStudios().add(new Studio("Batterie"));
-        model.getStudios().add(new Studio("Studio B"));
-        model.getStudios().add(new Studio("Studio C"));
-    }
 
-    //Define the button cell
-    private class ButtonCell extends TableCell<Studio, Boolean> {
+        Serializer serializer = new Persister();
+        File source = new File("studio.xml");
 
-        final Button cellButton = new Button("-");
-
-        ButtonCell() {
-
-            cellButton.setOnAction(new EventHandler<ActionEvent>() {
-
-                @Override
-                public void handle(ActionEvent t) {
-                    // do something when button clicked
-                    //...
-                    final Studio item = (Studio) getTableRow().getItem();
-                    model.getStudios().remove(item);
-                    System.out.println(item.getName());
-                    getTableView().refresh();
-                }
-            });
+        try {
+            model = serializer.read(DataModel.class, source);
+        } catch (Exception ex) {
+            Logger.getLogger(PlannerControler.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        //Display button if the row is not empty
-        @Override
-        protected void updateItem(Boolean t, boolean empty) {
-            super.updateItem(t, empty);
-            if (!empty) {
-                setGraphic(cellButton);
-            }
-        }
     }
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        accord.setExpandedPane(studioPane);
+        accord.setExpandedPane(playerPane);
 
         slotSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 10, 5));
         slotSpinner.getValueFactory().valueProperty().bindBidirectional(model.getMaxSlotProperty());
 
         ///durationSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(15, 240, 45, 15));
-
         runButton.setOnMouseClicked((event) -> {
+            System.out.println(model.getSongs().get(0));
             System.out.println(model.toXML());
+/*
+            Serializer serializer = new Persister();
+            File result = new File("studio.xml");
+
+            try {
+                serializer.write(model, result);
+            } catch (Exception ex) {
+                Logger.getLogger(PlannerControler.class.getName()).log(Level.SEVERE, null, ex);
+            }*/
         });
 
+        // studio
         studioTable.setEditable(true);
-        Callback<TableColumn<Studio, String>, TableCell<Studio, String>> cellFactory
-                = (TableColumn<Studio, String> param) -> new TextFieldTableCell<>();
+        addEditableStringTableColumn("Name", studioTable, (t) -> t.getNameProperty(), (t, v) -> t.setName(v));
+        studioTable.setItems(model.getStudios());
 
-        TableColumn<Studio, String> nameCol = new TableColumn("Name");
-        nameCol.setMinWidth(100);
-        nameCol.setEditable(true);
-        nameCol.setCellValueFactory(cellData -> cellData.getValue().getNameProperty());
-        nameCol.setCellFactory(TextFieldTableCell.<Studio>forTableColumn());
-        nameCol.setOnEditCommit(
-                (TableColumn.CellEditEvent<Studio, String> t) -> {
-                    ((Studio) t.getTableView().getItems()
-                            .get(t.getTablePosition().getRow()))
-                            .setName(t.getNewValue());
+        assignDataAdd(addStudioButton, model.getStudios(), () -> new Studio("new"));
+        assignDataDelete(deleteStudioButton, model.getStudios(), studioTable.getSelectionModel());
 
+        // instrument
+        instrumentTable.setEditable(true);
+        addEditableStringTableColumn("Name", instrumentTable, (t) -> t.getNameProperty(), (t, v) -> t.setName(v));
+        instrumentTable.setItems(model.getInstruments());
+
+        assignDataAdd(addInstrumentButton, model.getInstruments(), () -> new Instrument("new"));
+        assignDataDelete(deleteInstrumentButton, model.getInstruments(), instrumentTable.getSelectionModel());
+
+        // player
+        playerTable.setEditable(true);
+        addEditableStringTableColumn("First name", playerTable, (t) -> t.getFirstNameProperty(), (t, v) -> t.setFirstName(v));
+        addEditableStringTableColumn("Last name", playerTable, (t) -> t.getLastNameProperty(), (t, v) -> t.setLastName(v));
+        playerTable.setItems(model.getPlayers());
+
+        assignDataAdd(addPlayerButton, model.getPlayers(), () -> new Player("new", ""));
+        assignDataDelete(deletePlayerButton, model.getPlayers(), playerTable.getSelectionModel());
+
+        // song
+        songTable.setEditable(true);
+        addEditableStringTableColumn("Name", songTable, (t) -> t.getNameProperty(), (t, v) -> t.setName(v));
+        addEditableObjectTableColumn("Prefered studio", songTable, model.getStudios(), (t) -> t.getPreferedStudioProperty(), (t, v) -> t.setPreferedStudio(v));
+        songTable.setItems(model.getSongs());
+
+        assignDataAdd(addSongButton, model.getSongs(), () -> new Song("new", null));
+        assignDataDelete(deleteSongButton, model.getSongs(), songTable.getSelectionModel());
+
+    }
+
+    private <T> void addEditableStringTableColumn(String columnName, TableView<T> tableView,
+            Function<T, SimpleStringProperty> propertyAccessor,
+            BiConsumer<T, String> propertySetter) {
+
+        TableColumn<T, String> column = new TableColumn(columnName);
+        column.setMinWidth(100);
+        column.setEditable(true);
+        column.setCellValueFactory(cellData -> propertyAccessor.apply(cellData.getValue()));
+        column.setCellFactory(TextFieldTableCell.<T>forTableColumn());
+        column.setOnEditCommit(
+                (TableColumn.CellEditEvent<T, String> t) -> {
+                    propertySetter.accept(((T) t.getTableView().getItems()
+                            .get(t.getTablePosition().getRow())), t.getNewValue());
                 });
 
-        TableColumn<Studio, Boolean> delColumn = new TableColumn<>("Del");
+        tableView.getColumns().add(column);
+    }
 
-        delColumn.setCellValueFactory((TableColumn.CellDataFeatures<Studio, Boolean> p)
-                -> new SimpleBooleanProperty(p.getValue() != null));
+    private <T, U> void addEditableObjectTableColumn(String columnName, TableView<T> tableView, ObservableList<U> list,
+            Function<T, SimpleObjectProperty<U>> propertyAccessor,
+            BiConsumer<T, U> propertySetter) {
 
-        delColumn.setCellFactory((TableColumn<Studio, Boolean> p) -> new ButtonCell());
+        TableColumn<T, U> column = new TableColumn(columnName);
+        column.setMinWidth(100);
+        column.setEditable(true);
+        column.setCellValueFactory(cellData -> propertyAccessor.apply(cellData.getValue()));
+        column.setCellFactory(ComboBoxTableCell.forTableColumn(list));
+        column.setOnEditCommit(
+                (TableColumn.CellEditEvent<T, U> t) -> {
+                    propertySetter.accept(((T) t.getTableView().getItems()
+                            .get(t.getTablePosition().getRow())), t.getNewValue());
+                });
 
-        studioTable.setItems(model.getStudios());
-        studioTable.getColumns().addAll(nameCol, delColumn);
+        tableView.getColumns().add(column);
+    }
+
+    private <T> void assignDataAdd(Button button, ObservableList<T> list, Supplier<T> newInstance) {
+        button.setOnMouseClicked((event) -> {
+            list.add(newInstance.get());
+        });
+    }
+
+    private <T> void assignDataDelete(Button button, ObservableList<T> list, TableView.TableViewSelectionModel<T> selectionModel) {
+        button.setOnMouseClicked((event) -> {
+            list.remove(selectionModel.getSelectedItem());
+        });
     }
 
     public void setData() {
