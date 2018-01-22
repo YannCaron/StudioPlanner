@@ -45,7 +45,7 @@ public class CompatibilityGraph {
             return false;
         }
         for (Player player1 : song1.getPlayers()) {
-            if (player1.isFree()) return true;
+            //if (player1.isFree()) return true;
             for (Player player2 : song2.getPlayers()) {
                 if (player1 == player2 && !player2.isFree()) {
                     return false;

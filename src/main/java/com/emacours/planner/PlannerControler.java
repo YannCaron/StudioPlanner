@@ -5,32 +5,39 @@
  */
 package com.emacours.planner;
 
+import com.emacours.planner.algorithm.Planning;
 import com.emacours.planner.algorithm.SongPlanner;
 import com.emacours.planner.model.DataModel;
 import com.emacours.planner.model.Instrument;
 import com.emacours.planner.model.Player;
+import com.emacours.planner.model.Slot;
 import com.emacours.planner.model.Song;
 import com.emacours.planner.model.Studio;
 import java.io.File;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener.Change;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Accordion;
 import javafx.scene.control.Button;
+import javafx.scene.control.SelectionMode;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TitledPane;
@@ -97,10 +104,19 @@ public class PlannerControler implements Initializable {
     private Button runButton;
 
     @FXML
+    private TableView<Slot> planningTable;
+
+    @FXML
     private Accordion accord;
 
     @FXML
     private TitledPane studioPane, playerPane;
+
+    @FXML
+    private TabPane mainPane;
+
+    @FXML
+    private Tab songTab, planningTab;
 
     SongPlanner planner = null;
 
@@ -137,9 +153,7 @@ public class PlannerControler implements Initializable {
                 Logger.getLogger(PlannerControler.class.getName()).log(Level.SEVERE, null, ex);
             }
 
-            planner = new SongPlanner(model);
-            planner.compute();
-            planner.next();
+            runPlanner();
 
         });
 
@@ -227,6 +241,17 @@ public class PlannerControler implements Initializable {
         tableView.getColumns().add(column);
     }
 
+    private <T> void addReadonlyStringTableColumn(String columnName, TableView<T> tableView,
+            Function<T, SimpleStringProperty> propertyAccessor) {
+
+        TableColumn<T, String> column = new TableColumn(columnName);
+        column.setMinWidth(100);
+        column.setEditable(true);
+        column.setCellValueFactory(cellData -> propertyAccessor.apply(cellData.getValue()));
+
+        tableView.getColumns().add(column);
+    }
+
     private <T> void addEditableBooleanTableColumn(String columnName, TableView<T> tableView,
             Function<T, SimpleBooleanProperty> propertyAccessor,
             BiConsumer<T, Boolean> propertySetter) {
@@ -275,6 +300,70 @@ public class PlannerControler implements Initializable {
         button.setOnMouseClicked((event) -> {
             list.remove(selectionModel.getSelectedItem());
         });
+    }
+
+    private String nullableSongName(Song song) {
+        if (song == null) {
+            return " - ";
+        }
+        return song.getName();
+    }
+
+    private void runPlanner() {
+        planner = new SongPlanner(model);
+        planner.compute();
+
+        Planning planning = planner.next();
+        if (planning != null) {
+            List<Slot> slots = new ArrayList<Slot>();
+
+            int i = 0;
+            Slot slot = null;
+            for (Song song : planning.getPlanning()) {
+                int s = i % model.getStudioDomainSize();
+                int t = i / model.getStudioDomainSize();
+
+                if (s == 0) {
+                    if (slot != null && !slot.isEmpty()) {
+                        slots.add(slot);
+                    }
+
+                    slot = new Slot("Slot " + (t + 1));
+                }
+
+                if (song != null) {
+                    slot.addSong(model.getStudios().get(s), song);
+                }
+
+                i++;
+            }
+
+            planningTable.getItems().clear();
+            planningTable.getColumns().clear();
+            planningTable.getItems().addAll(slots);
+            planningTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+            planningTable.getSelectionModel().setCellSelectionEnabled(true);
+            addReadonlyStringTableColumn("Name", planningTable, (t) -> new ReadOnlyStringWrapper(t.getName()));
+
+            for (Studio studio : model.getStudios()) {
+                addReadonlyStringTableColumn(studio.getName(), planningTable, (t) -> new ReadOnlyStringWrapper(nullableSongName(t.getSong(studio))));
+            }
+
+            /*
+            planningTable.setOnMousePressed((event) -> {
+                planningTable.getSelectionModel().clearSelection();
+            });
+
+            planningTable.setOnMouseReleased((event) -> {
+                System.out.println(planningTable.getSelectionModel().getSelectedIndex());
+                planningTable.getSelectionModel().select(1, planningTable.getColumns().get(1));
+                planningTable.getSelectionModel().select(2, planningTable.getColumns().get(2));
+            });*/
+
+            mainPane.getSelectionModel().select(planningTab);
+
+        }
+
     }
 
 }

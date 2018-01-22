@@ -18,6 +18,10 @@ public class Planning {
     private final Song[] planning;
     private final DataModel model;
 
+    public Song[] getPlanning() {
+        return planning;
+    }
+
     public Planning(Song[] planning, DataModel model) {
         this.planning = planning;
         this.model = model;
@@ -58,8 +62,8 @@ public class Planning {
 
             if (s == 0 && i != 0) {
                 sb.append('\n');
-            } 
-            
+            }
+
             if (s == 0) {
                 sb.append("Slot ");
                 sb.append(t);
@@ -67,7 +71,7 @@ public class Planning {
             } else {
                 sb.append(", ");
             }
-            
+
             sb.append(model.getStudios().get(s).getName());
             sb.append("-");
             sb.append(planning[i]);

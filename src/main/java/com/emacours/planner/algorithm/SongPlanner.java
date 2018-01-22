@@ -54,7 +54,7 @@ public class SongPlanner {
         // check player set compatibility
         int studioFrom = slot * model.getStudios().size();
         int studioTo = (slot + 1) * model.getStudios().size();
-        
+
         for (int s = studioFrom; s < studioTo; s++) {
             Song checkSong = planning[s];
             if (checkSong != null && !compatibilityGraph.query(song, checkSong)) {
@@ -74,23 +74,43 @@ public class SongPlanner {
         return -1;
     }
 
-    public void compute() {
-        System.out.println("Compatibilities\n" + compatibilityGraph);
-        
-        stack.clear();
-
-        MinConstrainingSongPQ initialList = new MinConstrainingSongPQ(model.getSongs());
-
-        stack.push(new State(new Song[model.getDomainSize()], initialList));
+    private Song getPossibleSong(Song[] planning, int position, SongPQ songPQ) {
+        SongPQ pq = new SongPQ(songPQ);
+        while (!pq.isEmpty()) {
+            Song song = pq.poll();
+            if (checkConstraints(planning, song, position)) {
+                return song;
+            }
+        }
+        return null;
     }
 
-    public void next() {
+    private int getNextPosition(Song[] planning) {
+        for (int p = 0; p < planning.length; p++) {
+            if (planning[p] == null) {
+                return p;
+            }
+        }
+        return -1;
+    }
+
+    public void compute() {
+        System.out.println("Compatibilities\n" + compatibilityGraph);
+
+        stack.clear();
+
+        SongPQ initialList = new SongPQ(model.getSongs());
+
+        stack.push(new State(0, new Song[model.getDomainSize()], initialList));
+    }
+
+    public Planning next() {
         int count = 0;
 
         while (!stack.isEmpty()) {
             State state = stack.pop();
-            PriorityQueue<Song> pq = new PriorityQueue<>(state.tail);
-            //System.out.println("Visite: " + state);
+            SongPQ pq = new SongPQ(state.tail);
+            System.out.println("Visite: " + state);
             if (state.tail.isEmpty()) {
                 Planning planning = new Planning(state.planning, model);
 
@@ -98,7 +118,7 @@ public class SongPlanner {
                     plannings.add(planning);
                     System.out.println("Found solution in [" + count + "] steps");
                     System.out.println(planning);
-                    return;
+                    return planning;
                 }
             }
             count++;
@@ -110,18 +130,18 @@ public class SongPlanner {
                 if (h != -1) {
                     Song[] planning = state.planning.clone();
                     planning[h] = song;
-                    PriorityQueue<Song> newPq = new PriorityQueue<>(state.tail);
+                    SongPQ newPq = new SongPQ(state.tail);
                     newPq.remove(song);
 
-                    stack.push(new State(planning, newPq));
+                    stack.push(new State(0, planning, newPq));
                 }
 
             }
 
         }
-
         this.isOver = true;
         System.out.println("No more solution found!");
+        return null;
     }
 
 }
