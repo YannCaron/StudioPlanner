@@ -35,7 +35,6 @@ public class FXMain extends Application {
         primaryStage.setScene(new Scene(root));
         primaryStage.show();
 
-        controler.setData();
     }
 
     /**

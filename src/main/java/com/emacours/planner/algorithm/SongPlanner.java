@@ -54,7 +54,7 @@ public class SongPlanner {
         // check player set compatibility
         int studioFrom = slot * model.getStudios().size();
         int studioTo = (slot + 1) * model.getStudios().size();
-
+        
         for (int s = studioFrom; s < studioTo; s++) {
             Song checkSong = planning[s];
             if (checkSong != null && !compatibilityGraph.query(song, checkSong)) {
@@ -75,8 +75,9 @@ public class SongPlanner {
     }
 
     public void compute() {
+        System.out.println("Compatibilities\n" + compatibilityGraph);
+        
         stack.clear();
-        model.getSongs().forEach((e) -> System.out.println("Priority " + e.countConstraint()));
 
         MinConstrainingSongPQ initialList = new MinConstrainingSongPQ(model.getSongs());
 

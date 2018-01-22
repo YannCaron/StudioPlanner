@@ -5,6 +5,7 @@
  */
 package com.emacours.planner.model;
 
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Root;
@@ -19,6 +20,7 @@ public class Player {
 
     private final SimpleStringProperty firstNameProperty;
     private final SimpleStringProperty lastNameProperty;
+    private final SimpleBooleanProperty freeProperty;
 
     @Attribute(required = true)
     public String getFirstName() {
@@ -40,6 +42,14 @@ public class Player {
         this.lastNameProperty.set(lastName);
     }
 
+    public boolean isFree() {
+        return freeProperty.get();
+    }
+
+    public void setFree(boolean free) {
+        this.freeProperty.set(free);
+    }
+
     public SimpleStringProperty getFirstNameProperty() {
         return firstNameProperty;
     }
@@ -48,9 +58,14 @@ public class Player {
         return lastNameProperty;
     }
 
+    public SimpleBooleanProperty getFreeProperty() {
+        return freeProperty;
+    }
+
     public Player(@Attribute(name = "firstName") String firstName, @Attribute(name = "lastName") String lastName) {
         this.firstNameProperty = new SimpleStringProperty(firstName);
         this.lastNameProperty = new SimpleStringProperty(lastName);
+        this.freeProperty = new SimpleBooleanProperty(false);
     }
 
     @Override

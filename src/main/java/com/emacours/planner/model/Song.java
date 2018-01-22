@@ -7,8 +7,6 @@ package com.emacours.planner.model;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Map;
-import javafx.beans.property.SimpleMapProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import org.simpleframework.xml.Attribute;
@@ -23,10 +21,9 @@ import org.simpleframework.xml.Root;
 @Root(strict = false)
 public class Song {
 
-    public static final int STUDIO_CONSTRAINT_VALUE = 10;
-
     private final SimpleStringProperty nameProperty;
     private final SimpleStringProperty commentProperty;
+    private int constraint = 0;
 
     // constraints
     @ElementMap(name = "instrumentPlayers", inline = true, required = false)
@@ -62,11 +59,18 @@ public class Song {
         return commentProperty;
     }
 
+    public void calculateConstraint(int compatibleWith, int totalSong) {
+        constraint = (totalSong - compatibleWith) + (hasPreferedStudio() ? totalSong : 0);
+    }
+    
+    public int getConstraint() {
+        return constraint;
+    }
+
     public Song(@Attribute(name = "name") String name,
             @Attribute(name = "comment", required = false) String comment,
             @Element(name = "preferedStudio", required = false) Studio preferedStudio,
             @ElementMap(name = "instrumentPlayers", inline = true, required = false) HashMap<Instrument, Player> instrumentPlayers) {
-        System.out.println(preferedStudio);
         this.nameProperty = new SimpleStringProperty(name);
         this.commentProperty = new SimpleStringProperty(comment);
         this.preferedStudioProperty = new SimpleObjectProperty<>(preferedStudio);
@@ -122,10 +126,6 @@ public class Song {
             addPlayer(instrument, newValue);
         });*/
         return property;
-    }
-
-    public int countConstraint() {
-        return instrumentPlayers.size() + (hasPreferedStudio() ? STUDIO_CONSTRAINT_VALUE : 0);
     }
 
     @Override

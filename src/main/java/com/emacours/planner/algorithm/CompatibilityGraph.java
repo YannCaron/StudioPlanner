@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 /**
@@ -19,16 +20,14 @@ import java.util.Set;
  */
 public class CompatibilityGraph {
 
-    private final List<Song> songs;
     private Map<Song, Set<Song>> graph;
 
     public CompatibilityGraph(List<Song> songs) {
-        this.songs = songs;
         this.graph = new HashMap<>();
-        computeGraph();
+        computeGraph(songs);
     }
 
-    private void computeGraph() {
+    private void computeGraph(List<Song> songs) {
         for (Song song1 : songs) {
             Set<Song> set = new HashSet<>();
             for (Song song2 : songs) {
@@ -37,6 +36,7 @@ public class CompatibilityGraph {
                 }
                 graph.put(song1, set);
             }
+            song1.calculateConstraint(set.size(), songs.size());
         }
     }
 
@@ -45,8 +45,9 @@ public class CompatibilityGraph {
             return false;
         }
         for (Player player1 : song1.getPlayers()) {
+            if (player1.isFree()) return true;
             for (Player player2 : song2.getPlayers()) {
-                if (player1 == player2) {
+                if (player1 == player2 && !player2.isFree()) {
                     return false;
                 }
             }
@@ -60,6 +61,21 @@ public class CompatibilityGraph {
         }
 
         return graph.get(song1).contains(song2);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (Entry<Song, Set<Song>> entry : graph.entrySet()) {
+            sb.append(entry.getKey());
+            sb.append(" (");
+            sb.append(entry.getValue().size());
+            sb.append(")");
+            sb.append(" -> ");
+            sb.append(entry.getValue().toString());
+            sb.append('\n');
+        }
+        return sb.toString();
     }
 
 }

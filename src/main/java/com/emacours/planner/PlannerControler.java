@@ -13,13 +13,13 @@ import com.emacours.planner.model.Song;
 import com.emacours.planner.model.Studio;
 import java.io.File;
 import java.net.URL;
-import java.util.Comparator;
 import java.util.ResourceBundle;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -34,6 +34,7 @@ import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TitledPane;
+import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.control.cell.TextFieldTableCell;
 import org.simpleframework.xml.Serializer;
@@ -101,6 +102,8 @@ public class PlannerControler implements Initializable {
     @FXML
     private TitledPane studioPane, playerPane;
 
+    SongPlanner planner = null;
+
     public PlannerControler() {
 
         Strategy strategy = new CycleStrategy("_id", "_ref");
@@ -109,7 +112,6 @@ public class PlannerControler implements Initializable {
 
         try {
             model = serializer.read(DataModel.class, source);
-            System.out.println(model);
         } catch (Exception ex) {
             Logger.getLogger(PlannerControler.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -120,13 +122,12 @@ public class PlannerControler implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         accord.setExpandedPane(playerPane);
 
-        slotSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 10, 5));
+        slotSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 25, 5));
         slotSpinner.getValueFactory().valueProperty().bindBidirectional(model.getMaxSlotProperty());
 
         runButton.setOnMouseClicked((event) -> {
 
             //System.out.println(model.toXML());
-
             try {
                 Strategy strategy = new CycleStrategy("_id", "_ref");
                 Serializer serializer = new Persister(strategy);
@@ -136,13 +137,10 @@ public class PlannerControler implements Initializable {
                 Logger.getLogger(PlannerControler.class.getName()).log(Level.SEVERE, null, ex);
             }
 
-            SongPlanner planner = new SongPlanner(model);
+            planner = new SongPlanner(model);
             planner.compute();
-            
-            if (planner.hasNext()) {
-                planner.next();
-            }
-            
+            planner.next();
+
         });
 
         // studio
@@ -165,6 +163,7 @@ public class PlannerControler implements Initializable {
         playerTable.setEditable(true);
         addEditableStringTableColumn("First name", playerTable, (t) -> t.getFirstNameProperty(), (t, v) -> t.setFirstName(v));
         addEditableStringTableColumn("Last name", playerTable, (t) -> t.getLastNameProperty(), (t, v) -> t.setLastName(v));
+        addEditableBooleanTableColumn("Free", playerTable, (t) -> t.getFreeProperty(), (t, v) -> t.setFree(v));
         playerTable.setItems(model.getPlayers());
 
         assignDataAdd(addPlayerButton, model.getPlayers(), () -> new Player("new", ""));
@@ -201,7 +200,7 @@ public class PlannerControler implements Initializable {
                 for (Instrument instrument : c.getRemoved()) {
                 }
 
-                System.out.println(c.getAddedSubList());
+                //System.out.println(c.getAddedSubList());
             }
         });
 
@@ -228,11 +227,22 @@ public class PlannerControler implements Initializable {
         tableView.getColumns().add(column);
     }
 
-    private <U> ObservableList<U> optionalList(ObservableList<U> list) {
-        ObservableList<U> newList = FXCollections.observableArrayList();
-        newList.add(null);
-        newList.addAll(list);
-        return newList;
+    private <T> void addEditableBooleanTableColumn(String columnName, TableView<T> tableView,
+            Function<T, SimpleBooleanProperty> propertyAccessor,
+            BiConsumer<T, Boolean> propertySetter) {
+
+        TableColumn<T, Boolean> column = new TableColumn(columnName);
+        column.setMinWidth(100);
+        column.setEditable(true);
+        column.setCellValueFactory(cellData -> propertyAccessor.apply(cellData.getValue()));
+        column.setCellFactory(CheckBoxTableCell.<T>forTableColumn(column));
+        column.setOnEditCommit(
+                (TableColumn.CellEditEvent<T, Boolean> t) -> {
+                    propertySetter.accept(((T) t.getTableView().getItems()
+                            .get(t.getTablePosition().getRow())), t.getNewValue());
+                });
+
+        tableView.getColumns().add(column);
     }
 
     private <T, U> void addEditableObjectTableColumn(String columnName, TableView<T> tableView, ObservableList<U> list,
@@ -265,9 +275,6 @@ public class PlannerControler implements Initializable {
         button.setOnMouseClicked((event) -> {
             list.remove(selectionModel.getSelectedItem());
         });
-    }
-
-    public void setData() {
     }
 
 }

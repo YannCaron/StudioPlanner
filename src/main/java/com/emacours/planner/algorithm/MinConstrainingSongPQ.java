@@ -17,9 +17,9 @@ import java.util.PriorityQueue;
 public class MinConstrainingSongPQ extends PriorityQueue<Song> {
 
     private static final Comparator<Song> MIN_CONSTRAINT_SONG = (Song o1, Song o2) -> {
-        if (o1.countConstraint() < o2.countConstraint()) {
+        if (o1.getConstraint() < o2.getConstraint()) {
             return -1;
-        } else if (o1.countConstraint() > o2.countConstraint()) {
+        } else if (o1.getConstraint() > o2.getConstraint()) {
             return 1;
         } else {
             return 0;
@@ -30,7 +30,7 @@ public class MinConstrainingSongPQ extends PriorityQueue<Song> {
         super(MIN_CONSTRAINT_SONG);
         super.addAll(songs);
     }
-    
+
     public MinConstrainingSongPQ clone() {
         return new MinConstrainingSongPQ(this);
     }
