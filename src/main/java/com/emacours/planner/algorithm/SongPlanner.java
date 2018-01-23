@@ -9,7 +9,6 @@ import com.emacours.planner.model.DataModel;
 import com.emacours.planner.model.Song;
 import com.emacours.planner.model.Studio;
 import java.util.HashSet;
-import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.Stack;
 
@@ -27,6 +26,10 @@ public class SongPlanner {
 
     public boolean hasNext() {
         return !isOver;
+    }
+
+    public CompatibilityGraph getCompatibilityGraph() {
+        return compatibilityGraph;
     }
 
     public SongPlanner(DataModel model) {
@@ -68,26 +71,6 @@ public class SongPlanner {
     private int getNextHypothesis(Song[] planning, Song song) {
         for (int p = 0; p < planning.length; p++) {
             if (planning[p] == null && checkConstraints(planning, song, p)) {
-                return p;
-            }
-        }
-        return -1;
-    }
-
-    private Song getPossibleSong(Song[] planning, int position, SongPQ songPQ) {
-        SongPQ pq = new SongPQ(songPQ);
-        while (!pq.isEmpty()) {
-            Song song = pq.poll();
-            if (checkConstraints(planning, song, position)) {
-                return song;
-            }
-        }
-        return null;
-    }
-
-    private int getNextPosition(Song[] planning) {
-        for (int p = 0; p < planning.length; p++) {
-            if (planning[p] == null) {
                 return p;
             }
         }

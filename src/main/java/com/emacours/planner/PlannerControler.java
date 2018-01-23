@@ -23,6 +23,8 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -38,12 +40,16 @@ import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.layout.Background;
+import javafx.scene.paint.Color;
+import javafx.util.Callback;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 import org.simpleframework.xml.strategy.CycleStrategy;
@@ -228,7 +234,7 @@ public class PlannerControler implements Initializable {
             BiConsumer<T, String> propertySetter) {
 
         TableColumn<T, String> column = new TableColumn(columnName);
-        column.setMinWidth(100);
+        //column.setMinWidth(50);
         column.setEditable(true);
         column.setCellValueFactory(cellData -> propertyAccessor.apply(cellData.getValue()));
         column.setCellFactory(TextFieldTableCell.<T>forTableColumn());
@@ -241,15 +247,16 @@ public class PlannerControler implements Initializable {
         tableView.getColumns().add(column);
     }
 
-    private <T> void addReadonlyStringTableColumn(String columnName, TableView<T> tableView,
+    private <T> TableColumn<T, String> addReadonlyStringTableColumn(String columnName, TableView<T> tableView,
             Function<T, SimpleStringProperty> propertyAccessor) {
 
         TableColumn<T, String> column = new TableColumn(columnName);
-        column.setMinWidth(100);
+        //column.setMinWidth(100);
         column.setEditable(true);
         column.setCellValueFactory(cellData -> propertyAccessor.apply(cellData.getValue()));
 
         tableView.getColumns().add(column);
+        return column;
     }
 
     private <T> void addEditableBooleanTableColumn(String columnName, TableView<T> tableView,
@@ -257,7 +264,8 @@ public class PlannerControler implements Initializable {
             BiConsumer<T, Boolean> propertySetter) {
 
         TableColumn<T, Boolean> column = new TableColumn(columnName);
-        column.setMinWidth(100);
+        column.setMinWidth(40);
+        column.setMaxWidth(40);
         column.setEditable(true);
         column.setCellValueFactory(cellData -> propertyAccessor.apply(cellData.getValue()));
         column.setCellFactory(CheckBoxTableCell.<T>forTableColumn(column));
@@ -276,7 +284,7 @@ public class PlannerControler implements Initializable {
             Comparator<U> comparator*/) {
 
         TableColumn<T, U> column = new TableColumn(columnName);
-        column.setMinWidth(100);
+        //column.setMinWidth(100);
         column.setEditable(true);
         column.setCellValueFactory(cellData -> propertyAccessor.apply(cellData.getValue()));
         //FXCollections.sort(list, comparator);
@@ -302,16 +310,11 @@ public class PlannerControler implements Initializable {
         });
     }
 
-    private String nullableSongName(Song song) {
-        if (song == null) {
-            return " - ";
-        }
-        return song.getName();
-    }
-
     private void runPlanner() {
         planner = new SongPlanner(model);
         planner.compute();
+
+        Song dummySong = new Song("-");
 
         Planning planning = planner.next();
         if (planning != null) {
@@ -331,9 +334,10 @@ public class PlannerControler implements Initializable {
                     slot = new Slot("Slot " + (t + 1));
                 }
 
-                if (song != null) {
-                    slot.addSong(model.getStudios().get(s), song);
+                if (song == null) {
+                    song = dummySong;
                 }
+                slot.addSong(model.getStudios().get(s), song);
 
                 i++;
             }
@@ -341,24 +345,61 @@ public class PlannerControler implements Initializable {
             planningTable.getItems().clear();
             planningTable.getColumns().clear();
             planningTable.getItems().addAll(slots);
+
             planningTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
             planningTable.getSelectionModel().setCellSelectionEnabled(true);
             addReadonlyStringTableColumn("Name", planningTable, (t) -> new ReadOnlyStringWrapper(t.getName()));
 
             for (Studio studio : model.getStudios()) {
-                addReadonlyStringTableColumn(studio.getName(), planningTable, (t) -> new ReadOnlyStringWrapper(nullableSongName(t.getSong(studio))));
+                TableColumn<Slot, String> column = addReadonlyStringTableColumn(studio.getName(), planningTable, (t) -> new ReadOnlyStringWrapper(t.getSong(studio).getName()));
+                column.setUserData(studio);
+
+                column.setCellFactory((TableColumn<Slot, String> param) -> new TableCell<Slot, String>() {
+
+                    @Override
+                    protected void updateItem(String item, boolean empty) {
+                        super.updateItem(item, empty);
+                        setText(item);
+
+                        if (getTableRow().getIndex() == -1 || getTableRow().getIndex() >= getTableView().getItems().size()) {
+                            return;
+                        }
+
+                        Slot slot = getTableView().getItems().get(getTableRow().getIndex());
+                        if (slot.getCanAccept(studio)) {
+                            setStyle("");
+                        } else {
+                            setStyle("-fx-background-color:#ccccccff");
+                        }
+                    }
+                });
+
             }
 
-            /*
-            planningTable.setOnMousePressed((event) -> {
-                planningTable.getSelectionModel().clearSelection();
-            });
+            planningTable.getSelectionModel().getSelectedCells().addListener(new InvalidationListener() {
 
-            planningTable.setOnMouseReleased((event) -> {
-                System.out.println(planningTable.getSelectionModel().getSelectedIndex());
-                planningTable.getSelectionModel().select(1, planningTable.getColumns().get(1));
-                planningTable.getSelectionModel().select(2, planningTable.getColumns().get(2));
-            });*/
+                boolean state = false;
+
+                @Override
+                public void invalidated(Observable observable) {
+
+                    int idColumn = planningTable.getSelectionModel().getSelectedCells().get(0).getColumn();
+                    if (idColumn < 1) {
+                        return;
+                    }
+
+                    Slot selectedSlot = planningTable.getSelectionModel().getSelectedItem();
+                    Studio studio = (Studio) planningTable.getColumns().get(idColumn).getUserData();
+                    Song song = selectedSlot.getSong(studio);
+
+                    for (Slot slot : slots) {
+                        slot.applyAccept(planner.getCompatibilityGraph(), song, dummySong);
+                    }
+
+                    state = !state;
+                    planningTable.refresh();
+                }
+            });
 
             mainPane.getSelectionModel().select(planningTab);
 
