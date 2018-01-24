@@ -45,9 +45,11 @@ public class CompatibilityGraph {
             return false;
         }
         for (Player player1 : song1.getPlayers()) {
-            for (Player player2 : song2.getPlayers()) {
-                if (player1 == player2 && !player2.isFree()) {
-                    return false;
+            if (!player1.isFree()) {
+                for (Player player2 : song2.getPlayers()) {
+                    if (player1 == player2 && !player2.isFree()) {
+                        return false;
+                    }
                 }
             }
         }

@@ -30,8 +30,6 @@ public class DataModel {
     @ElementList(inline = true, required = false)
     private ObservableList<Studio> studios;
 
-    private final SimpleIntegerProperty maxSlotProperty;
-
     @ElementList(inline = true, required = false)
     private ObservableList<Player> players;
 
@@ -43,20 +41,6 @@ public class DataModel {
 
     public ObservableList<Studio> getStudios() {
         return studios;
-    }
-
-    @Element
-    public int getMaxSlot() {
-        return maxSlotProperty.get();
-    }
-
-    @Element
-    public void setMaxSlot(int maxSlot) {
-        this.maxSlotProperty.set(maxSlot);
-    }
-
-    public SimpleIntegerProperty getMaxSlotProperty() {
-        return maxSlotProperty;
     }
 
     public ObservableList<Player> getPlayers() {
@@ -73,14 +57,14 @@ public class DataModel {
 
     public DataModel() {
         studios = FXCollections.observableArrayList();
-        maxSlotProperty = new SimpleIntegerProperty();
+        //maxSlotProperty = new SimpleIntegerProperty();
         players = FXCollections.observableArrayList();
         instruments = FXCollections.observableArrayList();
         songs = FXCollections.observableArrayList();
     }
 
     public int getDomainSize() {
-        return studios.size() * getMaxSlot();
+        return studios.size() * songs.size();
     }
 
     public int getStudioDomainSize() {
@@ -93,7 +77,6 @@ public class DataModel {
 
         Studio studioA = new Studio("A");
         Studio studioB = new Studio("B");
-        dataModel.setMaxSlot(2);
 
         Instrument bass = new Instrument("bass");
         Instrument guitare = new Instrument("guitare");
@@ -101,13 +84,13 @@ public class DataModel {
         Instrument drum = new Instrument("drum");
         Instrument percusion = new Instrument("percusion");
 
-        Player steph = new Player("Steph", "");
-        Player fred = new Player("Fred", "");
-        Player yann = new Player("Yann", "Caron");
-        Player lionel = new Player("Lionel", "");
-        Player estelle = new Player("Estelle", "Gardia");
-        Player dummy1 = new Player("Dummy 1", "");
-        Player dummy2 = new Player("Dummy 2", "");
+        Player steph = new Player("Steph", "", false);
+        Player fred = new Player("Fred", "", false);
+        Player yann = new Player("Yann", "Caron", false);
+        Player lionel = new Player("Lionel", "", false);
+        Player estelle = new Player("Estelle", "Gardia", false);
+        Player dummy1 = new Player("Dummy 1", "", false);
+        Player dummy2 = new Player("Dummy 2", "", false);
 
         Song mJhones = new Song("Mr Johns");
         Song otis = new Song("Otis Reading");

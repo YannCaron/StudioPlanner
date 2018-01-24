@@ -21,6 +21,7 @@ public class Player {
     private final SimpleStringProperty firstNameProperty;
     private final SimpleStringProperty lastNameProperty;
     private final SimpleBooleanProperty freeProperty;
+    private boolean playSong;
 
     @Attribute(required = true)
     public String getFirstName() {
@@ -42,12 +43,18 @@ public class Player {
         this.lastNameProperty.set(lastName);
     }
 
+    @Attribute(name = "free", required = false)
     public boolean isFree() {
         return freeProperty.get();
     }
 
+    @Attribute(name = "free", required = false)
     public void setFree(boolean free) {
         this.freeProperty.set(free);
+    }
+
+    public boolean isPlaySong() {
+        return playSong;
     }
 
     public SimpleStringProperty getFirstNameProperty() {
@@ -62,10 +69,30 @@ public class Player {
         return freeProperty;
     }
 
-    public Player(@Attribute(name = "firstName") String firstName, @Attribute(name = "lastName") String lastName) {
+    public Player(@Attribute(name = "firstName") String firstName,
+            @Attribute(name = "lastName") String lastName,
+            @Attribute(name = "free") Boolean free) {
         this.firstNameProperty = new SimpleStringProperty(firstName);
         this.lastNameProperty = new SimpleStringProperty(lastName);
-        this.freeProperty = new SimpleBooleanProperty(false);
+
+        if (free == null) {
+            free = false;
+        }
+        this.freeProperty = new SimpleBooleanProperty(free);
+        this.playSong = false;
+    }
+
+    public void applyPlaySong(Song song) {
+        playSong = false;
+        for (Player player : song.getPlayers()) {
+            if (player == this) {
+                playSong = true;
+            }
+        }
+    }
+    
+    public void clearPlaySong() {
+        playSong = false;
     }
 
     @Override

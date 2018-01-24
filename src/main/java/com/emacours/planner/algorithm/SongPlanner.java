@@ -8,6 +8,7 @@ package com.emacours.planner.algorithm;
 import com.emacours.planner.model.DataModel;
 import com.emacours.planner.model.Song;
 import com.emacours.planner.model.Studio;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Stack;
@@ -93,7 +94,7 @@ public class SongPlanner {
         while (!stack.isEmpty()) {
             State state = stack.pop();
             SongPQ pq = new SongPQ(state.tail);
-            System.out.println("Visite: " + state);
+            System.out.println("Visite: " + Arrays.toString(state.planning));
             if (state.tail.isEmpty()) {
                 Planning planning = new Planning(state.planning, model);
 

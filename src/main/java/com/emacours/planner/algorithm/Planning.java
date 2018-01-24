@@ -23,8 +23,34 @@ public class Planning {
     }
 
     public Planning(Song[] planning, DataModel model) {
-        this.planning = planning;
+        this.planning = trim(planning, model);
         this.model = model;
+    }
+
+    private int trimIndex(Song[] planning, DataModel model) {
+        int nt = model.getStudioDomainSize();
+        int ns = planning.length / nt;
+
+        for (int t = 0; t < ns; t++) {
+            boolean slotHasData = false;
+            for (int s = 0; s < nt; s++) {
+                Song song = planning[t * nt + s];
+                if (song != null) {
+                    slotHasData = true;
+                }
+            }
+
+            if (!slotHasData) {
+                return (t+1) * nt;
+            }
+        }
+        
+        return planning.length;
+    }
+
+    private Song[] trim(Song[] planning, DataModel model) {
+        int trimIndex = trimIndex(planning, model);
+        return Arrays.copyOf(planning, trimIndex);
     }
 
     @Override

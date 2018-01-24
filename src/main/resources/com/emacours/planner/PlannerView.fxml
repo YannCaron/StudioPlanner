@@ -8,7 +8,6 @@
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.SeparatorMenuItem?>
-<?import javafx.scene.control.Spinner?>
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
@@ -96,23 +95,6 @@
                                                    </opaqueInsets>
                                                    <VBox.margin>
                                                       <Insets />
-                                                   </VBox.margin>
-                                                </HBox>
-                                                <Label contentDisplay="CENTER" layoutX="10.0" layoutY="10.0" text="Time slots" textOverrun="CLIP">
-                                                   <font>
-                                                      <Font size="15.0" />
-                                                   </font>
-                                                   <VBox.margin>
-                                                      <Insets top="15.0" />
-                                                   </VBox.margin>
-                                                </Label>
-                                                <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0">
-                                                   <children>
-                                                      <Label text="Max time slots : " />
-                                                      <Spinner fx:id="slotSpinner" editable="true" HBox.hgrow="ALWAYS" />
-                                                   </children>
-                                                   <VBox.margin>
-                                                      <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                                                    </VBox.margin>
                                                 </HBox>
                                                 <Label contentDisplay="CENTER" layoutX="10.0" layoutY="190.0" text="Instruments" textOverrun="CLIP">
