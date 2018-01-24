@@ -13,5 +13,7 @@ Remark2 : Algorithm can be backtracked manualy to give next solution
 
 ## Screenshot
 
-![Planner screenshot](/screenshotPlanning.png?raw=true "Screenshot")
+![Song screenshot](/screenshotPlanning.png?raw=true "The song edition")
+
+![Planner screenshot](/screenshotPlanning.png?raw=true "The planning generated")
 
