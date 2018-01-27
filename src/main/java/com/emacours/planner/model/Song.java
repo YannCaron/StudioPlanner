@@ -59,8 +59,8 @@ public class Song {
         return commentProperty;
     }
 
-    public void calculateConstraint(int compatibleWith, int totalSong) {
-        constraint = (totalSong - compatibleWith) + (hasPreferedStudio() ? totalSong : 0);
+    public void calculateConstraint(int score, int studioScore) {
+        constraint = score + (hasPreferedStudio() ? studioScore : 0);
     }
     
     public int getConstraint() {

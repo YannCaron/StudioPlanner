@@ -20,7 +20,7 @@ public class Player {
 
     private final SimpleStringProperty firstNameProperty;
     private final SimpleStringProperty lastNameProperty;
-    private final SimpleBooleanProperty freeProperty;
+    private final SimpleBooleanProperty LooseProperty;
     private boolean playSong;
 
     @Attribute(required = true)
@@ -43,14 +43,14 @@ public class Player {
         this.lastNameProperty.set(lastName);
     }
 
-    @Attribute(name = "free", required = false)
-    public boolean isFree() {
-        return freeProperty.get();
+    @Attribute(name = "loose", required = false)
+    public boolean isLoose() {
+        return LooseProperty.get();
     }
 
-    @Attribute(name = "free", required = false)
-    public void setFree(boolean free) {
-        this.freeProperty.set(free);
+    @Attribute(name = "loose", required = false)
+    public void setLoose(boolean loose) {
+        this.LooseProperty.set(loose);
     }
 
     public boolean isPlaySong() {
@@ -65,20 +65,20 @@ public class Player {
         return lastNameProperty;
     }
 
-    public SimpleBooleanProperty getFreeProperty() {
-        return freeProperty;
+    public SimpleBooleanProperty getLooseProperty() {
+        return LooseProperty;
     }
 
     public Player(@Attribute(name = "firstName") String firstName,
             @Attribute(name = "lastName") String lastName,
-            @Attribute(name = "free") Boolean free) {
+            @Attribute(name = "loose") Boolean loose) {
         this.firstNameProperty = new SimpleStringProperty(firstName);
         this.lastNameProperty = new SimpleStringProperty(lastName);
 
-        if (free == null) {
-            free = false;
+        if (loose == null) {
+            loose = false;
         }
-        this.freeProperty = new SimpleBooleanProperty(free);
+        this.LooseProperty = new SimpleBooleanProperty(loose);
         this.playSong = false;
     }
 

@@ -6,6 +6,7 @@
 package com.emacours.planner.algorithm;
 
 import com.emacours.planner.model.DataModel;
+import com.emacours.planner.model.Player;
 import com.emacours.planner.model.Song;
 import com.emacours.planner.model.Studio;
 import java.util.Arrays;
@@ -59,14 +60,37 @@ public class SongPlanner {
         int studioFrom = slot * model.getStudios().size();
         int studioTo = (slot + 1) * model.getStudios().size();
 
+        Set<Player> loosePlayers = new HashSet<>();
         for (int s = studioFrom; s < studioTo; s++) {
             Song checkSong = planning[s];
-            if (checkSong != null && !compatibilityGraph.query(song, checkSong)) {
-                return false;
+            if (checkSong != null) {
+                if (!compatibilityGraph.query(song, checkSong)) {
+                    return false;
+                } else {
+                    Set<Player> otherLoose = compatibilityGraph.queryLoose(checkSong);
+                    if (include(loosePlayers, otherLoose)) {
+                        return false;
+                    }
+
+                    addAllSet(loosePlayers, otherLoose);
+                }
             }
         }
 
         return true;
+    }
+
+    private static <T> void addAllSet(Set<T> to, Set<T> from) {
+        if (from != null) {
+            to.addAll(from);
+        }
+    }
+
+    private static <T> boolean include(Set<T> set1, Set<T> set2) {
+        if (set1 == null || set2 == null) {
+            return false;
+        }
+        return set1.containsAll(set2);
     }
 
     private int getNextHypothesis(Song[] planning, Song song) {

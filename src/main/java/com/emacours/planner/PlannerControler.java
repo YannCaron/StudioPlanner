@@ -184,7 +184,7 @@ public class PlannerControler implements Initializable {
         playerTable.setEditable(true);
         TableColumn<Player, String> firstNameColumn = addEditableStringTableColumn("First name", playerTable, (t) -> t.getFirstNameProperty(), (t, v) -> t.setFirstName(v));
         TableColumn<Player, String> lastNameColumn = addEditableStringTableColumn("Last name", playerTable, (t) -> t.getLastNameProperty(), (t, v) -> t.setLastName(v));
-        addEditableBooleanTableColumn("Free", playerTable, (t) -> t.getFreeProperty(), (t, v) -> t.setFree(v));
+        addEditableBooleanTableColumn("Loose", playerTable, (t) -> t.getLooseProperty(), (t, v) -> t.setLoose(v));
         playerTable.setItems(model.getPlayers());
 
         Callback<TableColumn<Player, String>, TableCell<Player, String>> playerCellCallback = new Callback<TableColumn<Player, String>, TableCell<Player, String>>() {

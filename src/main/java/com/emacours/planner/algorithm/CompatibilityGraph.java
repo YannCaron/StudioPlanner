@@ -20,10 +20,12 @@ import java.util.Set;
  */
 public class CompatibilityGraph {
 
-    private Map<Song, Set<Song>> graph;
+    private final Map<Song, Set<Song>> graph;
+    private final Map<Song, Set<Player>> loosePlayers;
 
     public CompatibilityGraph(List<Song> songs) {
         this.graph = new HashMap<>();
+        this.loosePlayers = new HashMap<>();
         computeGraph(songs);
     }
 
@@ -36,23 +38,46 @@ public class CompatibilityGraph {
                 }
                 graph.put(song1, set);
             }
-            song1.calculateConstraint(set.size(), songs.size());
         }
+        for (Song song1 : songs) {
+            song1.calculateConstraint(graph.size() - (graph.get(song1).size() + getLooseSize(song1)), graph.size());
+        }
+    }
+
+    private void addLoose(Song song, Player player) {
+        Set<Player> set = loosePlayers.get(song);
+        if (set == null) {
+            set = new HashSet<>();
+            loosePlayers.put(song, set);
+        }
+        set.add(player);
+    }
+
+    private int getLooseSize(Song song) {
+        Set<Player> loose = loosePlayers.get(song);
+        if (loose == null) {
+            return 0;
+        }
+        return loose.size();
     }
 
     private boolean areCompatible(Song song1, Song song2) {
         if (song1 == song2) {
             return false;
         }
+
         for (Player player1 : song1.getPlayers()) {
-            if (!player1.isFree()) {
+            if (!player1.isLoose()) {
                 for (Player player2 : song2.getPlayers()) {
-                    if (player1 == player2 && !player2.isFree()) {
+                    if (player1 == player2) {
                         return false;
                     }
                 }
+            } else {
+                addLoose(song1, player1);
             }
         }
+
         return true;
     }
 
@@ -64,14 +89,26 @@ public class CompatibilityGraph {
         return graph.get(song1).contains(song2);
     }
 
+    public Set<Player> queryLoose(Song song1) {
+        return loosePlayers.get(song1);
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
+        sb.append("Compatobilities:\n");
         for (Entry<Song, Set<Song>> entry : graph.entrySet()) {
             sb.append(entry.getKey());
             sb.append(" (");
-            sb.append(entry.getValue().size());
+            sb.append(entry.getKey().getConstraint());
             sb.append(")");
+            sb.append(" -> ");
+            sb.append(entry.getValue().toString());
+            sb.append('\n');
+        }
+        sb.append("Loose Player:\n");
+        for (Entry<Song, Set<Player>> entry : loosePlayers.entrySet()) {
+            sb.append(entry.getKey());
             sb.append(" -> ");
             sb.append(entry.getValue().toString());
             sb.append('\n');
