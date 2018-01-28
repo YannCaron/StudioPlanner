@@ -5,3 +5,5 @@
 2h - FXML bis
 3h - TableView
 2h - Compatibility background
+2h - Loos player algorithm
+2h - Improve GUI

@@ -28,9 +28,6 @@ public class FXMain extends Application {
         PlannerControler controler = loader.getController();
 
         primaryStage.setTitle("Studio Planner");
-        /*primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/icon-16.png")));
-        primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/icon-32.png")));
-        primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/icon-64.png")));*/
         primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/icon-128.png")));
         primaryStage.setScene(new Scene(root));
         primaryStage.show();

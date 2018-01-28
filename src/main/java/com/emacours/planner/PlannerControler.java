@@ -23,36 +23,34 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ListChangeListener.Change;
 import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Accordion;
 import javafx.scene.control.Button;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.Spinner;
-import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
-import javafx.scene.control.TablePosition;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.control.cell.TextFieldTableCell;
-import javafx.scene.layout.Background;
-import javafx.scene.paint.Color;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
@@ -67,45 +65,37 @@ public class PlannerControler implements Initializable {
 
     public static final String NOTICE_STYLE = "-fx-background-color:#428aa3ff";
     public static final String NOTICE_STYLE_LIGHT = "-fx-background-color:#b7deedff";
+    private static final Song DUMMY_SONG = new Song("-");
 
     private static final Logger LOGGER = Logger.getLogger(PlannerControler.class.getName());
     DataModel model;
 
     @FXML
+    private VBox mainLayout;
+
+    @FXML
     private TableView<Studio> studioTable;
 
     @FXML
-    private Button addStudioButton;
-
-    @FXML
-    private Button deleteStudioButton;
+    private Button addStudioButton, deleteStudioButton;
 
     @FXML
     private TableView<Instrument> instrumentTable;
 
     @FXML
-    private Button addInstrumentButton;
-
-    @FXML
-    private Button deleteInstrumentButton;
+    private Button addInstrumentButton, deleteInstrumentButton;
 
     @FXML
     private TableView<Player> playerTable;
 
     @FXML
-    private Button addPlayerButton;
-
-    @FXML
-    private Button deletePlayerButton;
+    private Button addPlayerButton, deletePlayerButton;
 
     @FXML
     private TableView<Song> songTable;
 
     @FXML
-    private Button addSongButton;
-
-    @FXML
-    private Button deleteSongButton;
+    private Button clipboardSongButton, addSongButton, deleteSongButton;
 
     @FXML
     private Spinner durationSpinner;
@@ -116,6 +106,9 @@ public class PlannerControler implements Initializable {
     @FXML
     private TableView<Slot> planningTable;
 
+    @FXML
+    private Button clipboardPlanningButton;
+    
     @FXML
     private Accordion accord;
 
@@ -248,14 +241,112 @@ public class PlannerControler implements Initializable {
 
                 for (Instrument instrument : c.getRemoved()) {
                 }
-
-                //System.out.println(c.getAddedSubList());
             }
         });
 
         assignDataAdd(addSongButton, model.getSongs(), () -> new Song("new"));
         assignDataDelete(deleteSongButton, model.getSongs(), songTable.getSelectionModel());
 
+        // planning table
+        planningTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        planningTable.getSelectionModel().setCellSelectionEnabled(true);
+        addReadonlyStringTableColumn("Name", planningTable, (t) -> new ReadOnlyStringWrapper(t.getName()));
+
+        for (Studio studio : model.getStudios()) {
+            TableColumn<Slot, String> column = addReadonlyStringTableColumn(studio.getName(), planningTable, (t) -> new ReadOnlyStringWrapper(t.getSong(studio).getName()));
+            column.setUserData(studio);
+
+            column.setCellFactory((TableColumn<Slot, String> param) -> new TableCell<Slot, String>() {
+
+                @Override
+                protected void updateItem(String item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(item);
+
+                    if (getTableRow().getIndex() == -1 || getTableRow().getIndex() >= getTableView().getItems().size()) {
+                        return;
+                    }
+
+                    Slot slot = getTableView().getItems().get(getTableRow().getIndex());
+                    switch (slot.getPossibleAction(studio)) {
+                        case NONE:
+                            setStyle(NOTICE_STYLE);
+                            break;
+                        case REPLACE:
+                            setStyle(NOTICE_STYLE_LIGHT);
+                            break;
+                        case SWITCH:
+                            setStyle("");
+                            break;
+                    }
+                }
+            });
+
+        }
+
+        planningTable.getSelectionModel().getSelectedCells().addListener(new InvalidationListener() {
+
+            boolean state = false;
+
+            @Override
+            public void invalidated(Observable observable) {
+
+                clearHighlights();
+                if (planningTable.getSelectionModel().getSelectedCells() == null
+                        || planningTable.getSelectionModel().getSelectedCells().size() <= 0) {
+                    return;
+                }
+
+                int idColumn = planningTable.getSelectionModel().getSelectedCells().get(0).getColumn();
+                if (idColumn < 1) {
+                    return;
+                }
+
+                Slot selectedSlot = planningTable.getSelectionModel().getSelectedItem();
+                Studio studio = (Studio) planningTable.getColumns().get(idColumn).getUserData();
+                Song song = selectedSlot.getSong(studio);
+
+                planningTable.getItems().forEach((slot) -> slot.applyPossibleAction(planner.getCompatibilityGraph(), DUMMY_SONG, selectedSlot, studio));
+
+                state = !state;
+                planningTable.refresh();
+
+                for (Player player : playerTable.getItems()) {
+                    player.applyPlaySong(song);
+                }
+                playerTable.refresh();
+            }
+        });
+
+        EventHandler<KeyEvent> clearOnEscape = new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent event) {
+                if (event.getCode() == KeyCode.ESCAPE) {
+                    clearHighlights();
+                }
+            }
+        };
+
+        Platform.runLater(() -> planningTable.getScene().setOnKeyPressed(clearOnEscape));
+        planningTable.setOnKeyPressed(clearOnEscape);
+        playerTable.setOnKeyPressed(clearOnEscape);
+
+        playerTable.getSelectionModel().getSelectedCells().addListener((Observable observable) -> {
+            clearHighlights();
+            Player player = playerTable.getSelectionModel().getSelectedItem();
+            planningTable.getItems().forEach((slot1) -> {
+                slot1.applyPlayer(player);
+            });
+            planningTable.refresh();
+        });
+
+    }
+
+    private void clearHighlights() {
+        planningTable.getItems().forEach((com.emacours.planner.model.Slot slot1) -> slot1.clearPossibleAction());
+        planningTable.refresh();
+        playerTable.getItems().forEach((p) -> p.clearPlaySong());
+        playerTable.refresh();
     }
 
     private <T> TableColumn<T, String> addEditableStringTableColumn(String columnName, TableView<T> tableView,
@@ -346,8 +437,6 @@ public class PlannerControler implements Initializable {
         planner = new SongPlanner(model);
         planner.compute();
 
-        Song dummySong = new Song("-");
-
         Planning planning = planner.next();
         if (planning != null) {
             List<Slot> slots = new ArrayList<Slot>();
@@ -367,117 +456,15 @@ public class PlannerControler implements Initializable {
                 }
 
                 if (song == null) {
-                    song = dummySong;
+                    song = DUMMY_SONG;
                 }
                 slot.addSong(model.getStudios().get(s), song);
 
                 i++;
             }
 
-            planningTable.getColumns().clear();
             planningTable.getItems().clear();
             planningTable.getItems().addAll(slots);
-
-            planningTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-            planningTable.getSelectionModel().setCellSelectionEnabled(true);
-            addReadonlyStringTableColumn("Name", planningTable, (t) -> new ReadOnlyStringWrapper(t.getName()));
-
-            for (Studio studio : model.getStudios()) {
-                TableColumn<Slot, String> column = addReadonlyStringTableColumn(studio.getName(), planningTable, (t) -> new ReadOnlyStringWrapper(t.getSong(studio).getName()));
-                column.setUserData(studio);
-
-                column.setCellFactory((TableColumn<Slot, String> param) -> new TableCell<Slot, String>() {
-
-                    @Override
-                    protected void updateItem(String item, boolean empty) {
-                        super.updateItem(item, empty);
-                        setText(item);
-
-                        if (getTableRow().getIndex() == -1 || getTableRow().getIndex() >= getTableView().getItems().size()) {
-                            return;
-                        }
-
-                        Slot slot = getTableView().getItems().get(getTableRow().getIndex());
-                        switch (slot.getPossibleAction(studio)) {
-                            case NONE:
-                                setStyle(NOTICE_STYLE);
-                                break;
-                            case REPLACE:
-                                setStyle(NOTICE_STYLE_LIGHT);
-                                break;
-                            case SWITCH:
-                                setStyle("");
-                                break;
-                        }
-                    }
-                });
-
-            }
-
-            planningTable.getSelectionModel().getSelectedCells().addListener(new InvalidationListener() {
-
-                boolean state = false;
-
-                @Override
-                public void invalidated(Observable observable) {
-
-                    int idColumn = planningTable.getSelectionModel().getSelectedCells().get(0).getColumn();
-                    if (idColumn < 1) {
-                        slots.forEach((slot) -> slot.clearPossibleAction());
-                        planningTable.refresh();
-                        playerTable.getItems().forEach((p) -> p.clearPlaySong());
-                        playerTable.refresh();
-                        return;
-                    }
-
-                    Slot selectedSlot = planningTable.getSelectionModel().getSelectedItem();
-                    Studio studio = (Studio) planningTable.getColumns().get(idColumn).getUserData();
-                    Song song = selectedSlot.getSong(studio);
-
-                    planningTable.getItems().forEach((slot) -> slot.applyPossibleAction(planner.getCompatibilityGraph(), dummySong, selectedSlot, studio));
-
-                    state = !state;
-                    planningTable.refresh();
-
-                    for (Player player : playerTable.getItems()) {
-                        player.applyPlaySong(song);
-                    }
-                    playerTable.refresh();
-                }
-            });
-
-            planningTable.focusedProperty().addListener(new ChangeListener<Boolean>() {
-                @Override
-                public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-                    if (newValue == false) {
-                        planningTable.getItems().forEach((slot) -> slot.clearPossibleAction());
-                        planningTable.refresh();
-                        playerTable.getItems().forEach((p) -> p.clearPlaySong());
-                        playerTable.refresh();
-                    }
-                }
-            });
-
-            playerTable.getSelectionModel().getSelectedCells().addListener(new InvalidationListener() {
-                @Override
-                public void invalidated(Observable observable) {
-                    Player player = playerTable.getSelectionModel().getSelectedItem();
-                    for (Slot slot : slots) {
-                        slot.applyPlayer(player);
-                    }
-                    planningTable.refresh();
-                }
-            });
-
-            playerTable.focusedProperty().addListener(new ChangeListener<Boolean>() {
-                @Override
-                public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-                    if (newValue == false) {
-                        planningTable.getItems().forEach((slot) -> slot.clearPossibleAction());
-                        planningTable.refresh();
-                    }
-                }
-            });
 
             mainPane.getSelectionModel().select(planningTab);
 
