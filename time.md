@@ -8,3 +8,4 @@
 2h - Loos player algorithm
 2h - Improve GUI
 2h - Planning multi selection
+2h30 - Menu management
