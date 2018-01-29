@@ -29,6 +29,7 @@ public class Planning {
 
     private int trimIndex(Song[] planning, DataModel model) {
         int nt = model.getStudioDomainSize();
+        if (nt == 0) return 0;
         int ns = planning.length / nt;
 
         for (int t = 0; t < ns; t++) {

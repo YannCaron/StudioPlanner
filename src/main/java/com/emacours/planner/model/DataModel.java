@@ -57,9 +57,15 @@ public class DataModel {
 
     public DataModel() {
         studios = FXCollections.observableArrayList();
-        //maxSlotProperty = new SimpleIntegerProperty();
-        players = FXCollections.observableArrayList();
         instruments = FXCollections.observableArrayList();
+        players = FXCollections.observableArrayList();
+        songs = FXCollections.observableArrayList();
+    }
+
+    public DataModel(DataModel newModel) {
+        this.studios = newModel.studios;
+        this.instruments = newModel.instruments;
+        this.players = newModel.players;
         songs = FXCollections.observableArrayList();
     }
 

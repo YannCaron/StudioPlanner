@@ -2,38 +2,38 @@
    <studio _id="1" name="Batterie"/>
    <studio _id="2" name="Studio B"/>
    <studio _id="3" name="Studio C"/>
-   <player _id="4" firstName="Alexis" lastName="" loose="false"/>
-   <player _id="5" firstName="Antoine" lastName="" loose="false"/>
-   <player _id="6" firstName="Beni" lastName="" loose="false"/>
-   <player _id="7" firstName="Camille" lastName="" loose="false"/>
-   <player _id="8" firstName="Damien" lastName="" loose="false"/>
-   <player _id="9" firstName="Daniel" lastName="" loose="false"/>
-   <player _id="10" firstName="Emma" lastName="" loose="false"/>
-   <player _id="11" firstName="Eric" lastName="" loose="false"/>
-   <player _id="12" firstName="Estelle" lastName="" loose="false"/>
-   <player _id="13" firstName="Fiona" lastName="" loose="false"/>
-   <player _id="14" firstName="Fred" lastName="" loose="false"/>
-   <player _id="15" firstName="Gaël" lastName="" loose="false"/>
-   <player _id="16" firstName="Guillaume" lastName="Bonet" loose="false"/>
-   <player _id="17" firstName="Hugo" lastName="" loose="false"/>
-   <player _id="18" firstName="Justine" lastName="" loose="false"/>
-   <player _id="19" firstName="Laurent" lastName="V." loose="false"/>
-   <player _id="20" firstName="Lisa" lastName="Vigna" loose="false"/>
-   <player _id="21" firstName="Loïc" lastName="Hevry" loose="false"/>
-   <player _id="22" firstName="Margo + Nina" lastName="" loose="false"/>
-   <player _id="23" firstName="Niel" lastName="" loose="false"/>
-   <player _id="24" firstName="Noeline" lastName="" loose="false"/>
-   <player _id="25" firstName="Pascal" lastName="Debise" loose="true"/>
-   <player _id="26" firstName="Patrick" lastName="" loose="false"/>
-   <player _id="27" firstName="Rafaël" lastName="" loose="false"/>
-   <player _id="28" firstName="Rose" lastName="C." loose="false"/>
-   <player _id="29" firstName="Steph" lastName="" loose="false"/>
-   <player _id="30" firstName="Sylvie" lastName="" loose="false"/>
-   <player _id="31" firstName="Titouan" lastName="Rollin" loose="false"/>
-   <player _id="32" firstName="Véronique" lastName="" loose="false"/>
-   <player _id="33" firstName="Vladimir" lastName="" loose="false"/>
-   <player _id="34" firstName="Yann" lastName="Caron" loose="false"/>
-   <player _id="35" firstName="Yohann" lastName="" loose="false"/>
+   <player _id="4" lastName="" loose="false" firstName="Alexis"/>
+   <player _id="5" lastName="" loose="false" firstName="Antoine"/>
+   <player _id="6" lastName="" loose="false" firstName="Beni"/>
+   <player _id="7" lastName="" loose="false" firstName="Camille"/>
+   <player _id="8" lastName="" loose="false" firstName="Damien"/>
+   <player _id="9" lastName="" loose="false" firstName="Daniel"/>
+   <player _id="10" lastName="" loose="false" firstName="Emma"/>
+   <player _id="11" lastName="" loose="false" firstName="Eric"/>
+   <player _id="12" lastName="" loose="false" firstName="Estelle"/>
+   <player _id="13" lastName="" loose="false" firstName="Fiona"/>
+   <player _id="14" lastName="" loose="false" firstName="Fred"/>
+   <player _id="15" lastName="" loose="false" firstName="Gaël"/>
+   <player _id="16" lastName="Bonet" loose="false" firstName="Guillaume"/>
+   <player _id="17" lastName="" loose="false" firstName="Hugo"/>
+   <player _id="18" lastName="" loose="false" firstName="Justine"/>
+   <player _id="19" lastName="V." loose="false" firstName="Laurent"/>
+   <player _id="20" lastName="Vigna" loose="false" firstName="Lisa"/>
+   <player _id="21" lastName="Hevry" loose="false" firstName="Loïc"/>
+   <player _id="22" lastName="" loose="false" firstName="Margo + Nina"/>
+   <player _id="23" lastName="" loose="false" firstName="Niel"/>
+   <player _id="24" lastName="" loose="false" firstName="Noeline"/>
+   <player _id="25" lastName="Debise" loose="true" firstName="Pascal"/>
+   <player _id="26" lastName="" loose="false" firstName="Patrick"/>
+   <player _id="27" lastName="" loose="false" firstName="Rafaël"/>
+   <player _id="28" lastName="C." loose="false" firstName="Rose"/>
+   <player _id="29" lastName="" loose="false" firstName="Steph"/>
+   <player _id="30" lastName="" loose="false" firstName="Sylvie"/>
+   <player _id="31" lastName="Rollin" loose="false" firstName="Titouan"/>
+   <player _id="32" lastName="" loose="false" firstName="Véronique"/>
+   <player _id="33" lastName="" loose="false" firstName="Vladimir"/>
+   <player _id="34" lastName="Caron" loose="false" firstName="Yann"/>
+   <player _id="35" lastName="" loose="false" firstName="Yohann"/>
    <instrument _id="36" name="Batterie"/>
    <instrument _id="37" name="Basse"/>
    <instrument _id="38" name="Guitare 1"/>
@@ -43,10 +43,6 @@
    <instrument _id="42" name="Chant 2 / choeurs"/>
    <song _id="43" name="Alice Merton">
       <entry>
-         <instrument _ref="37"/>
-         <player _ref="25"/>
-      </entry>
-      <entry>
          <instrument _ref="40"/>
          <player _ref="20"/>
       </entry>
@@ -55,19 +51,19 @@
          <player _ref="32"/>
       </entry>
       <entry>
+         <instrument _ref="36"/>
+         <player _ref="16"/>
+      </entry>
+      <entry>
          <instrument _ref="38"/>
          <player _ref="11"/>
       </entry>
       <entry>
-         <instrument _ref="36"/>
-         <player _ref="16"/>
-      </entry>
-   </song>
-   <song _id="44" comment="+1T" name="Bill Withers">
-      <entry>
          <instrument _ref="37"/>
          <player _ref="25"/>
       </entry>
+   </song>
+   <song _id="44" comment="+1T" name="Bill Withers">
       <entry>
          <instrument _ref="40"/>
          <player _ref="24"/>
@@ -77,23 +73,19 @@
          <player _ref="12"/>
       </entry>
       <entry>
+         <instrument _ref="36"/>
+         <player _ref="23"/>
+      </entry>
+      <entry>
          <instrument _ref="38"/>
          <player _ref="22"/>
       </entry>
       <entry>
-         <instrument _ref="36"/>
-         <player _ref="23"/>
+         <instrument _ref="37"/>
+         <player _ref="25"/>
       </entry>
    </song>
    <song _id="45" name="Brooklyn Funk">
-      <entry>
-         <instrument _ref="37"/>
-         <player _ref="16"/>
-      </entry>
-      <entry>
-         <instrument _ref="39"/>
-         <player _ref="11"/>
-      </entry>
       <entry>
          <instrument _ref="40"/>
          <player _ref="29"/>
@@ -103,19 +95,23 @@
          <player _ref="13"/>
       </entry>
       <entry>
+         <instrument _ref="36"/>
+         <player _ref="25"/>
+      </entry>
+      <entry>
          <instrument _ref="38"/>
          <player _ref="6"/>
       </entry>
       <entry>
-         <instrument _ref="36"/>
-         <player _ref="25"/>
+         <instrument _ref="37"/>
+         <player _ref="16"/>
+      </entry>
+      <entry>
+         <instrument _ref="39"/>
+         <player _ref="11"/>
       </entry>
    </song>
    <song _id="46" name="Calvin Harris">
-      <entry>
-         <instrument _ref="37"/>
-         <player _ref="9"/>
-      </entry>
       <entry>
          <instrument _ref="40"/>
          <player _ref="30"/>
@@ -125,23 +121,19 @@
          <player _ref="7"/>
       </entry>
       <entry>
+         <instrument _ref="36"/>
+         <player _ref="33"/>
+      </entry>
+      <entry>
          <instrument _ref="38"/>
          <player _ref="18"/>
       </entry>
       <entry>
-         <instrument _ref="36"/>
-         <player _ref="33"/>
+         <instrument _ref="37"/>
+         <player _ref="9"/>
       </entry>
    </song>
    <song _id="47" name="Counting Crows">
-      <entry>
-         <instrument _ref="37"/>
-         <player _ref="8"/>
-      </entry>
-      <entry>
-         <instrument _ref="39"/>
-         <player _ref="27"/>
-      </entry>
       <entry>
          <instrument _ref="40"/>
          <player _ref="10"/>
@@ -151,23 +143,23 @@
          <player _ref="12"/>
       </entry>
       <entry>
+         <instrument _ref="36"/>
+         <player _ref="33"/>
+      </entry>
+      <entry>
          <instrument _ref="38"/>
          <player _ref="6"/>
       </entry>
       <entry>
-         <instrument _ref="36"/>
-         <player _ref="33"/>
-      </entry>
-   </song>
-   <song _id="48" name="Ed Sheeran">
-      <entry>
          <instrument _ref="37"/>
-         <player _ref="34"/>
+         <player _ref="8"/>
       </entry>
       <entry>
          <instrument _ref="39"/>
-         <player _ref="21"/>
+         <player _ref="27"/>
       </entry>
+   </song>
+   <song _id="48" name="Ed Sheeran">
       <entry>
          <instrument _ref="40"/>
          <player _ref="20"/>
@@ -177,19 +169,23 @@
          <player _ref="32"/>
       </entry>
       <entry>
+         <instrument _ref="36"/>
+         <player _ref="23"/>
+      </entry>
+      <entry>
          <instrument _ref="38"/>
          <player _ref="27"/>
       </entry>
       <entry>
-         <instrument _ref="36"/>
-         <player _ref="23"/>
+         <instrument _ref="37"/>
+         <player _ref="34"/>
+      </entry>
+      <entry>
+         <instrument _ref="39"/>
+         <player _ref="21"/>
       </entry>
    </song>
    <song _id="49" name="Elbow">
-      <entry>
-         <instrument _ref="37"/>
-         <player _ref="9"/>
-      </entry>
       <entry>
          <instrument _ref="40"/>
          <player _ref="24"/>
@@ -199,19 +195,19 @@
          <player _ref="13"/>
       </entry>
       <entry>
+         <instrument _ref="36"/>
+         <player _ref="25"/>
+      </entry>
+      <entry>
          <instrument _ref="38"/>
          <player _ref="22"/>
       </entry>
       <entry>
-         <instrument _ref="36"/>
-         <player _ref="25"/>
+         <instrument _ref="37"/>
+         <player _ref="9"/>
       </entry>
    </song>
    <song _id="50" name="Inner Circle">
-      <entry>
-         <instrument _ref="37"/>
-         <player _ref="25"/>
-      </entry>
       <entry>
          <instrument _ref="40"/>
          <player _ref="28"/>
@@ -221,19 +217,19 @@
          <player _ref="7"/>
       </entry>
       <entry>
+         <instrument _ref="36"/>
+         <player _ref="4"/>
+      </entry>
+      <entry>
          <instrument _ref="38"/>
          <player _ref="21"/>
       </entry>
       <entry>
-         <instrument _ref="36"/>
-         <player _ref="4"/>
+         <instrument _ref="37"/>
+         <player _ref="25"/>
       </entry>
    </song>
    <song _id="51" name="Jamiroquai">
-      <entry>
-         <instrument _ref="37"/>
-         <player _ref="9"/>
-      </entry>
       <entry>
          <instrument _ref="40"/>
          <player _ref="29"/>
@@ -243,24 +239,20 @@
          <player _ref="13"/>
       </entry>
       <entry>
+         <instrument _ref="36"/>
+         <player _ref="4"/>
+      </entry>
+      <entry>
          <instrument _ref="38"/>
          <player _ref="25"/>
       </entry>
       <entry>
-         <instrument _ref="36"/>
-         <player _ref="4"/>
+         <instrument _ref="37"/>
+         <player _ref="9"/>
       </entry>
       <preferedStudio _ref="1"/>
    </song>
    <song _id="52" comment="+0,5T" name="JMSN">
-      <entry>
-         <instrument _ref="37"/>
-         <player _ref="34"/>
-      </entry>
-      <entry>
-         <instrument _ref="39"/>
-         <player _ref="8"/>
-      </entry>
       <entry>
          <instrument _ref="40"/>
          <player _ref="31"/>
@@ -270,12 +262,20 @@
          <player _ref="12"/>
       </entry>
       <entry>
+         <instrument _ref="36"/>
+         <player _ref="21"/>
+      </entry>
+      <entry>
          <instrument _ref="38"/>
          <player _ref="11"/>
       </entry>
       <entry>
-         <instrument _ref="36"/>
-         <player _ref="21"/>
+         <instrument _ref="37"/>
+         <player _ref="34"/>
+      </entry>
+      <entry>
+         <instrument _ref="39"/>
+         <player _ref="8"/>
       </entry>
    </song>
    <song _id="53" name="Lili Poe">
@@ -294,14 +294,6 @@
    </song>
    <song _id="54" name="Lofofora">
       <entry>
-         <instrument _ref="37"/>
-         <player _ref="25"/>
-      </entry>
-      <entry>
-         <instrument _ref="39"/>
-         <player _ref="27"/>
-      </entry>
-      <entry>
          <instrument _ref="41"/>
          <player _ref="34"/>
       </entry>
@@ -309,17 +301,17 @@
          <instrument _ref="36"/>
          <player _ref="21"/>
       </entry>
-      <preferedStudio _ref="1"/>
-   </song>
-   <song _id="55" name="Melodi Garbot">
       <entry>
          <instrument _ref="37"/>
-         <player _ref="16"/>
+         <player _ref="25"/>
       </entry>
       <entry>
          <instrument _ref="39"/>
-         <player _ref="8"/>
+         <player _ref="27"/>
       </entry>
+      <preferedStudio _ref="1"/>
+   </song>
+   <song _id="55" name="Melodi Garbot">
       <entry>
          <instrument _ref="40"/>
          <player _ref="29"/>
@@ -329,15 +321,35 @@
          <player _ref="12"/>
       </entry>
       <entry>
+         <instrument _ref="36"/>
+         <player _ref="25"/>
+      </entry>
+      <entry>
          <instrument _ref="38"/>
          <player _ref="26"/>
       </entry>
       <entry>
-         <instrument _ref="36"/>
-         <player _ref="25"/>
+         <instrument _ref="37"/>
+         <player _ref="16"/>
+      </entry>
+      <entry>
+         <instrument _ref="39"/>
+         <player _ref="8"/>
       </entry>
    </song>
    <song _id="56" name="Noir Desir">
+      <entry>
+         <instrument _ref="41"/>
+         <player _ref="34"/>
+      </entry>
+      <entry>
+         <instrument _ref="36"/>
+         <player _ref="17"/>
+      </entry>
+      <entry>
+         <instrument _ref="38"/>
+         <player _ref="5"/>
+      </entry>
       <entry>
          <instrument _ref="37"/>
          <player _ref="16"/>
@@ -346,24 +358,8 @@
          <instrument _ref="39"/>
          <player _ref="35"/>
       </entry>
-      <entry>
-         <instrument _ref="41"/>
-         <player _ref="34"/>
-      </entry>
-      <entry>
-         <instrument _ref="38"/>
-         <player _ref="5"/>
-      </entry>
-      <entry>
-         <instrument _ref="36"/>
-         <player _ref="17"/>
-      </entry>
    </song>
    <song _id="57" comment="-1,5T" name="Otis Redding">
-      <entry>
-         <instrument _ref="37"/>
-         <player _ref="34"/>
-      </entry>
       <entry>
          <instrument _ref="40"/>
          <player _ref="15"/>
@@ -373,19 +369,19 @@
          <player _ref="26"/>
       </entry>
       <entry>
+         <instrument _ref="36"/>
+         <player _ref="21"/>
+      </entry>
+      <entry>
          <instrument _ref="38"/>
          <player _ref="14"/>
       </entry>
       <entry>
-         <instrument _ref="36"/>
-         <player _ref="21"/>
+         <instrument _ref="37"/>
+         <player _ref="34"/>
       </entry>
    </song>
    <song _id="58" name="Rag&apos;n Bone Man">
-      <entry>
-         <instrument _ref="37"/>
-         <player _ref="22"/>
-      </entry>
       <entry>
          <instrument _ref="40"/>
          <player _ref="31"/>
@@ -398,8 +394,24 @@
          <instrument _ref="36"/>
          <player _ref="16"/>
       </entry>
+      <entry>
+         <instrument _ref="37"/>
+         <player _ref="22"/>
+      </entry>
    </song>
    <song _id="59" name="Red Hot Chilli Pepers">
+      <entry>
+         <instrument _ref="41"/>
+         <player _ref="14"/>
+      </entry>
+      <entry>
+         <instrument _ref="36"/>
+         <player _ref="4"/>
+      </entry>
+      <entry>
+         <instrument _ref="38"/>
+         <player _ref="25"/>
+      </entry>
       <entry>
          <instrument _ref="37"/>
          <player _ref="9"/>
@@ -408,35 +420,23 @@
          <instrument _ref="39"/>
          <player _ref="21"/>
       </entry>
-      <entry>
-         <instrument _ref="41"/>
-         <player _ref="14"/>
-      </entry>
-      <entry>
-         <instrument _ref="38"/>
-         <player _ref="25"/>
-      </entry>
-      <entry>
-         <instrument _ref="36"/>
-         <player _ref="4"/>
-      </entry>
    </song>
    <song _id="60" name="Royal Blood">
       <entry>
-         <instrument _ref="37"/>
-         <player _ref="34"/>
-      </entry>
-      <entry>
          <instrument _ref="41"/>
          <player _ref="32"/>
+      </entry>
+      <entry>
+         <instrument _ref="36"/>
+         <player _ref="19"/>
       </entry>
       <entry>
          <instrument _ref="38"/>
          <player _ref="18"/>
       </entry>
       <entry>
-         <instrument _ref="36"/>
-         <player _ref="19"/>
+         <instrument _ref="37"/>
+         <player _ref="34"/>
       </entry>
    </song>
 </dataModel>
