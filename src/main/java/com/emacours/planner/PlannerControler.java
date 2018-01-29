@@ -31,15 +31,14 @@ import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ListChangeListener.Change;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Scene;
 import javafx.scene.control.Accordion;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
@@ -55,6 +54,9 @@ import javafx.scene.control.TitledPane;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
@@ -71,7 +73,7 @@ import org.simpleframework.xml.strategy.Strategy;
  *
  * @author cyann
  */
-public class PlannerControler implements Initializable {
+public class PlannerControler implements Constants, Initializable {
 
     public static final String NOTICE_STYLE = "-fx-background-color:#428aa3ff";
     public static final String NOTICE_STYLE_LIGHT = "-fx-background-color:#b7deedff";
@@ -232,6 +234,9 @@ public class PlannerControler implements Initializable {
         assignButtonAdd(addPlayerButton, () -> model.getPlayers(), () -> new Player("new", "", false));
         assignButtonDelete(deletePlayerButton, () -> model.getPlayers(), playerTable.getSelectionModel());
 
+        clipboardSongButton.setOnAction(this::clipboardSongButton_onAction);
+        clipboardPlanningButton.setOnAction(this::clipboardPlanningButton_onAction);
+
         songTable.setOnKeyPressed((event) -> {
             if (event.getCode() == KeyCode.ESCAPE) {
                 if (songTable.getSelectionModel().getSelectedCells().size() <= 0) {
@@ -263,7 +268,11 @@ public class PlannerControler implements Initializable {
 
                     planningTable.refresh();
                 }
+
+                rightLabel.setText("Press [esc] to clear highlight. Hold [alt] and click for multi-selection.");
+
             }
+
         });
 
         playerTable.getSelectionModel().getSelectedCells().addListener((Observable observable) -> {
@@ -273,9 +282,19 @@ public class PlannerControler implements Initializable {
                 slot1.applyPlayer(player);
             });
             planningTable.refresh();
+
+            rightLabel.setText("Press [esc] to clear highlight.");
+
         });
 
-        loadModel();
+        // load file
+        String path = Configuration.getInstance().currentFile.get();
+        File file = new File(path);
+        if (!path.isEmpty() && file.exists()) {
+            openFile(file);
+        } else {
+            loadModel();
+        }
 
     }
 
@@ -314,6 +333,8 @@ public class PlannerControler implements Initializable {
         planningTable.refresh();
         playerTable.getItems().forEach((p) -> p.clearPlaySong());
         playerTable.refresh();
+
+        rightLabel.setText("");
     }
 
     private <T> TableColumn<T, String> addEditableStringTableColumn(String columnName, TableView<T> tableView,
@@ -419,7 +440,7 @@ public class PlannerControler implements Initializable {
 
         Planning planning = planner.next();
         if (planning != null) {
-            List<Slot> slots = new ArrayList<Slot>();
+            List<Slot> slots = new ArrayList<>();
 
             int i = 0;
             Slot slot = null;
@@ -450,6 +471,8 @@ public class PlannerControler implements Initializable {
             mainPane.getSelectionModel().select(planningTab);
 
         }
+        
+        leftLabel.setText(String.format("Solution found in [%d] steps !", planner.getStepCount()));
 
     }
 
@@ -514,59 +537,138 @@ public class PlannerControler implements Initializable {
     protected void newMenu_onAction(ActionEvent event) {
         this.model = new DataModel(this.model);
         loadModel();
+
+        leftLabel.setText("New planning created.");
+    }
+
+    private void openFile(File file) {
+        Strategy strategy = new CycleStrategy("_id", "_ref");
+        Serializer serializer = new Persister(strategy);
+
+        try {
+            this.model = serializer.read(DataModel.class, file);
+            loadModel();
+
+            leftLabel.setText(String.format("File [%s] opened successfully !", file.getName()));
+
+        } catch (Exception ex) {
+            Logger.getLogger(PlannerControler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void saveFile(File file) {
+        try {
+            Strategy strategy = new CycleStrategy("_id", "_ref");
+            Serializer serializer = new Persister(strategy);
+            serializer.write(model, file);
+
+            leftLabel.setText(String.format("File [%s] saved successfully !", file.getName()));
+
+        } catch (Exception ex) {
+            Logger.getLogger(PlannerControler.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     protected void openMenu_onAction(ActionEvent event) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Open Planner File");
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("EMA studio planner file", "*.emaml"));
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("EMA studio planner file", FILE_CHOSER_EXTENSION));
+        fileChooser.setInitialDirectory(new File(Configuration.getInstance().currentPath.get()));
         File file = fileChooser.showOpenDialog(stage);
 
         if (file != null) {
+            Configuration.getInstance().currentFile.set(file.getAbsolutePath());
+            Configuration.getInstance().currentPath.set(file.getParent());
 
-            Strategy strategy = new CycleStrategy("_id", "_ref");
-            Serializer serializer = new Persister(strategy);
-
-            try {
-                this.model = serializer.read(DataModel.class, file);
-                loadModel();
-            } catch (Exception ex) {
-                Logger.getLogger(PlannerControler.class.getName()).log(Level.SEVERE, null, ex);
-            }
-
+            openFile(file);
         }
     }
 
     protected void saveMenu_onAction(ActionEvent event) {
-        try {
-            Strategy strategy = new CycleStrategy("_id", "_ref");
-            Serializer serializer = new Persister(strategy);
-            File result = new File("studio.xml");
-            serializer.write(model, result);
-        } catch (Exception ex) {
-            Logger.getLogger(PlannerControler.class.getName()).log(Level.SEVERE, null, ex);
+        File file = new File(Configuration.getInstance().currentFile.get());
+        saveFile(file);
+    }
+
+    protected void saveAsMenu_onAction(ActionEvent event) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save as Planner File");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("EMA studio planner file", FILE_CHOSER_EXTENSION));
+        fileChooser.setInitialDirectory(new File(Configuration.getInstance().currentPath.get()));
+        File file = fileChooser.showSaveDialog(stage);
+
+        if (file != null) {
+            if (!file.getAbsolutePath().endsWith(FILE_EXTENSION)) {
+                file = new File(file.getAbsolutePath() + "." + FILE_EXTENSION);
+            }
+
+            Configuration.getInstance().currentFile.set(file.getAbsolutePath());
+            Configuration.getInstance().currentPath.set(file.getParent());
+
+            saveFile(file);
         }
 
     }
 
-    protected void saveAsMenu_onAction(ActionEvent event) {
-
-    }
-
     protected void revertMenu_onAction(ActionEvent event) {
-
+        openFile(new File(Configuration.getInstance().currentFile.get()));
     }
 
     protected void quitMenu_onAction(ActionEvent event) {
-
+        Platform.exit();
     }
 
     protected void aboutMenu_onAction(ActionEvent event) {
+        Alert dialog = new Alert(Alert.AlertType.INFORMATION);
+        dialog.setTitle("About studio planner");
+        dialog.setHeaderText("Studio planner\n© Yann Caron 2018\nUnder GPL License.");
 
+        dialog.setGraphic(new ImageView(this.getClass().getResource("/icon-128.png").toString()));
+
+        dialog.showAndWait();
     }
 
     protected void runButton_onClick(MouseEvent event) {
         runPlanner();
+    }
+
+    private void copyTableToClipboard(TableView table) {
+        StringBuilder csv = new StringBuilder();
+        int rows = table.getItems().size();
+        int cols = table.getColumns().size();
+        for (int r = 0; r < rows; r++) {
+            if (r != 0) {
+                csv.append("\n");
+            }
+            for (int c = 0; c < cols; c++) {
+                if (c != 0) {
+                    csv.append("\t");
+                }
+                TableColumn col = (TableColumn) table.getColumns().get(c);
+                csv.append("\"");
+                Object value = col.getCellObservableValue(r).getValue();
+                if (value != null) {
+                    csv.append(value);
+                }
+                csv.append("\"");
+            }
+        }
+
+        final Clipboard clipboard = Clipboard.getSystemClipboard();
+        final ClipboardContent content = new ClipboardContent();
+        content.putString(csv.toString());
+        clipboard.setContent(content);
+    }
+
+    protected void clipboardSongButton_onAction(ActionEvent event) {
+        copyTableToClipboard(songTable);
+        leftLabel.setText("Song table copied as CSV in clipboard.");
+        rightLabel.setText("Press [ctrl] + v to paste in Excel.");
+    }
+
+    protected void clipboardPlanningButton_onAction(ActionEvent event) {
+        copyTableToClipboard(planningTable);
+        leftLabel.setText("Planning table copied as CSV in clipboard.");
+        rightLabel.setText("Press [ctrl] + v to paste in Excel.");
     }
 
     protected void this_onEscape(KeyEvent event) {

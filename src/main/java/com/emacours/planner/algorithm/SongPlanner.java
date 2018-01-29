@@ -24,6 +24,7 @@ public class SongPlanner {
     private final CompatibilityGraph compatibilityGraph;
     private final Stack<State> stack;
     private final Set<Planning> plannings;
+    private int stepCount = 0;
     private boolean isOver;
 
     public boolean hasNext() {
@@ -32,6 +33,10 @@ public class SongPlanner {
 
     public CompatibilityGraph getCompatibilityGraph() {
         return compatibilityGraph;
+    }
+
+    public int getStepCount() {
+        return stepCount;
     }
 
     public SongPlanner(DataModel model) {
@@ -113,8 +118,6 @@ public class SongPlanner {
     }
 
     public Planning next() {
-        int count = 0;
-
         while (!stack.isEmpty()) {
             State state = stack.pop();
             SongPQ pq = new SongPQ(state.tail);
@@ -124,12 +127,12 @@ public class SongPlanner {
 
                 if (!plannings.contains(planning)) {
                     plannings.add(planning);
-                    System.out.println("Found solution in [" + count + "] steps");
+                    System.out.println("Found solution in [" + stepCount + "] steps");
                     System.out.println(planning);
                     return planning;
                 }
             }
-            count++;
+            stepCount++;
 
             while (!pq.isEmpty()) {
                 Song song = pq.poll();
