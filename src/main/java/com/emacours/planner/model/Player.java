@@ -5,6 +5,7 @@
  */
 package com.emacours.planner.model;
 
+import java.util.Map;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import org.simpleframework.xml.Attribute;
@@ -21,7 +22,7 @@ public class Player {
     private final SimpleStringProperty firstNameProperty;
     private final SimpleStringProperty lastNameProperty;
     private final SimpleBooleanProperty LooseProperty;
-    private boolean playSong;
+    private int playSong;
 
     @Attribute(required = true)
     public String getFirstName() {
@@ -53,7 +54,7 @@ public class Player {
         this.LooseProperty.set(loose);
     }
 
-    public boolean isPlaySong() {
+    public int getPlaySong() {
         return playSong;
     }
 
@@ -79,20 +80,18 @@ public class Player {
             loose = false;
         }
         this.LooseProperty = new SimpleBooleanProperty(loose);
-        this.playSong = false;
+        this.playSong = 0;
     }
 
-    public void applyPlaySong(Song song) {
-        playSong = false;
-        for (Player player : song.getPlayers()) {
-            if (player == this) {
-                playSong = true;
-            }
+    public void applyPlaySong(Map<Player, Integer> playingSong) {
+        playSong = 0;
+        if (playingSong.containsKey(this)) {
+            playSong = playingSong.get(this);
         }
     }
     
     public void clearPlaySong() {
-        playSong = false;
+        playSong = 0;
     }
 
     @Override

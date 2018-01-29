@@ -16,7 +16,9 @@ import com.emacours.planner.model.Studio;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -24,7 +26,6 @@ import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Platform;
-import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -43,6 +44,7 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TablePosition;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.cell.CheckBoxTableCell;
@@ -52,6 +54,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
+import javafx.util.converter.DefaultStringConverter;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 import org.simpleframework.xml.strategy.CycleStrategy;
@@ -108,7 +111,7 @@ public class PlannerControler implements Initializable {
 
     @FXML
     private Button clipboardPlanningButton;
-    
+
     @FXML
     private Accordion accord;
 
@@ -162,56 +165,24 @@ public class PlannerControler implements Initializable {
         addEditableStringTableColumn("Name", studioTable, (t) -> t.getNameProperty(), (t, v) -> t.setName(v));
         studioTable.setItems(model.getStudios());
 
-        assignDataAdd(addStudioButton, model.getStudios(), () -> new Studio("new"));
-        assignDataDelete(deleteStudioButton, model.getStudios(), studioTable.getSelectionModel());
+        assignButtonAdd(addStudioButton, model.getStudios(), () -> new Studio("new"));
+        assignButtonDelete(deleteStudioButton, model.getStudios(), studioTable.getSelectionModel());
 
         // instrument
         instrumentTable.setEditable(true);
         addEditableStringTableColumn("Name", instrumentTable, (t) -> t.getNameProperty(), (t, v) -> t.setName(v));
         instrumentTable.setItems(model.getInstruments());
 
-        assignDataAdd(addInstrumentButton, model.getInstruments(), () -> new Instrument("new"));
-        assignDataDelete(deleteInstrumentButton, model.getInstruments(), instrumentTable.getSelectionModel());
+        assignButtonAdd(addInstrumentButton, model.getInstruments(), () -> new Instrument("new"));
+        assignButtonDelete(deleteInstrumentButton, model.getInstruments(), instrumentTable.getSelectionModel());
 
-        // player
-        playerTable.setEditable(true);
-        TableColumn<Player, String> firstNameColumn = addEditableStringTableColumn("First name", playerTable, (t) -> t.getFirstNameProperty(), (t, v) -> t.setFirstName(v));
-        TableColumn<Player, String> lastNameColumn = addEditableStringTableColumn("Last name", playerTable, (t) -> t.getLastNameProperty(), (t, v) -> t.setLastName(v));
-        addEditableBooleanTableColumn("Loose", playerTable, (t) -> t.getLooseProperty(), (t, v) -> t.setLoose(v));
-        playerTable.setItems(model.getPlayers());
+        buildSongTable();
+        buildPlayerTable();
+        buildPlanningTable();
 
-        Callback<TableColumn<Player, String>, TableCell<Player, String>> playerCellCallback = new Callback<TableColumn<Player, String>, TableCell<Player, String>>() {
-            @Override
-            public TableCell<Player, String> call(TableColumn<Player, String> param) {
-                return new TableCell<Player, String>() {
+    }
 
-                    @Override
-                    protected void updateItem(String item, boolean empty) {
-                        super.updateItem(item, empty);
-                        setText(item);
-
-                        if (getTableRow() == null || getTableRow().getIndex() == -1 || getTableRow().getIndex() >= getTableView().getItems().size()) {
-                            return;
-                        }
-
-                        Player player = getTableView().getItems().get(getTableRow().getIndex());
-                        if (player.isPlaySong()) {
-                            setStyle(NOTICE_STYLE);
-                        } else {
-                            setStyle("");
-                        }
-                    }
-                };
-            }
-        };
-
-        firstNameColumn.setCellFactory(playerCellCallback);
-        lastNameColumn.setCellFactory(playerCellCallback);
-
-        assignDataAdd(addPlayerButton, model.getPlayers(), () -> new Player("new", "", false));
-        assignDataDelete(deletePlayerButton, model.getPlayers(), playerTable.getSelectionModel());
-
-        // song
+    private void buildSongTable() {
         songTable.setEditable(true);
         addEditableStringTableColumn("Name", songTable, (t) -> t.getNameProperty(), (t, v) -> t.setName(v));
         addEditableObjectTableColumn("Prefered studio", songTable, model.getStudios(), (t) -> t.getPreferedStudioProperty(), (t, v) -> t.setPreferedStudio(v));
@@ -244,10 +215,49 @@ public class PlannerControler implements Initializable {
             }
         });
 
-        assignDataAdd(addSongButton, model.getSongs(), () -> new Song("new"));
-        assignDataDelete(deleteSongButton, model.getSongs(), songTable.getSelectionModel());
+        assignButtonAdd(addSongButton, model.getSongs(), () -> new Song("new"));
+        assignButtonDelete(deleteSongButton, model.getSongs(), songTable.getSelectionModel());
 
-        // planning table
+    }
+
+    private void buildPlayerTable() {
+        playerTable.setEditable(true);
+        TableColumn<Player, String> firstNameColumn = addEditableStringTableColumn("First name", playerTable, (t) -> t.getFirstNameProperty(), (t, v) -> t.setFirstName(v));
+        TableColumn<Player, String> lastNameColumn = addEditableStringTableColumn("Last name", playerTable, (t) -> t.getLastNameProperty(), (t, v) -> t.setLastName(v));
+        addEditableBooleanTableColumn("Loose", playerTable, (t) -> t.getLooseProperty(), (t, v) -> t.setLoose(v));
+        playerTable.setItems(model.getPlayers());
+
+        Callback<TableColumn<Player, String>, TableCell<Player, String>> playerCellCallback = (TableColumn<Player, String> param) -> new TextFieldTableCell<Player, String>(new DefaultStringConverter()) {
+
+            @Override
+            public void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(item);
+
+                if (getTableRow() == null || getTableRow().getIndex() == -1 || getTableRow().getIndex() >= getTableView().getItems().size()) {
+                    return;
+                }
+
+                Player player = getTableView().getItems().get(getTableRow().getIndex());
+                if (player.getPlaySong() > 1) {
+                    setStyle(NOTICE_STYLE);
+                } else if (player.getPlaySong() == 1) {
+                    setStyle(NOTICE_STYLE_LIGHT);
+                } else {
+                    setStyle("");
+                }
+            }
+        };
+
+        firstNameColumn.setCellFactory(playerCellCallback);
+        lastNameColumn.setCellFactory(playerCellCallback);
+
+        assignButtonAdd(addPlayerButton, model.getPlayers(), () -> new Player("new", "", false));
+        assignButtonDelete(deletePlayerButton, model.getPlayers(), playerTable.getSelectionModel());
+
+    }
+
+    private void buildPlanningTable() {
         planningTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         planningTable.getSelectionModel().setCellSelectionEnabled(true);
         addReadonlyStringTableColumn("Name", planningTable, (t) -> new ReadOnlyStringWrapper(t.getName()));
@@ -284,46 +294,30 @@ public class PlannerControler implements Initializable {
 
         }
 
-        planningTable.getSelectionModel().getSelectedCells().addListener(new InvalidationListener() {
+        planningTable.getSelectionModel().getSelectedCells().addListener((Observable observable) -> {
+            clearHighlights();
 
-            boolean state = false;
+            applyPlanningSelectionInPlayer();
 
-            @Override
-            public void invalidated(Observable observable) {
-
-                clearHighlights();
-                if (planningTable.getSelectionModel().getSelectedCells() == null
-                        || planningTable.getSelectionModel().getSelectedCells().size() <= 0) {
-                    return;
-                }
+            if (planningTable.getSelectionModel().getSelectedCells() != null
+                    && planningTable.getSelectionModel().getSelectedCells().size() == 1) {
 
                 int idColumn = planningTable.getSelectionModel().getSelectedCells().get(0).getColumn();
-                if (idColumn < 1) {
-                    return;
+                if (idColumn >= 1) {
+
+                    Slot selectedSlot = planningTable.getSelectionModel().getSelectedItem();
+                    Studio studio = (Studio) planningTable.getColumns().get(idColumn).getUserData();
+
+                    planningTable.getItems().forEach((slot) -> slot.applyPossibleAction(planner.getCompatibilityGraph(), DUMMY_SONG, selectedSlot, studio));
+
+                    planningTable.refresh();
                 }
-
-                Slot selectedSlot = planningTable.getSelectionModel().getSelectedItem();
-                Studio studio = (Studio) planningTable.getColumns().get(idColumn).getUserData();
-                Song song = selectedSlot.getSong(studio);
-
-                planningTable.getItems().forEach((slot) -> slot.applyPossibleAction(planner.getCompatibilityGraph(), DUMMY_SONG, selectedSlot, studio));
-
-                state = !state;
-                planningTable.refresh();
-
-                for (Player player : playerTable.getItems()) {
-                    player.applyPlaySong(song);
-                }
-                playerTable.refresh();
             }
         });
 
-        EventHandler<KeyEvent> clearOnEscape = new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent event) {
-                if (event.getCode() == KeyCode.ESCAPE) {
-                    clearHighlights();
-                }
+        EventHandler<KeyEvent> clearOnEscape = (KeyEvent event) -> {
+            if (event.getCode() == KeyCode.ESCAPE) {
+                clearHighlights();
             }
         };
 
@@ -340,6 +334,36 @@ public class PlannerControler implements Initializable {
             planningTable.refresh();
         });
 
+    }
+
+    private boolean applyPlanningSelectionInPlayer() {
+        Map<Player, Integer> playingSong = new HashMap<>();
+
+        ObservableList<TablePosition> selection = planningTable.getSelectionModel().getSelectedCells();
+        for (TablePosition position : selection) {
+
+            if (position.getColumn() >= 1) {
+                Slot selectedSlot = planningTable.getItems().get(position.getRow());
+                Studio studio = (Studio) planningTable.getColumns().get(position.getColumn()).getUserData();
+
+                Song song = selectedSlot.getSong(studio);
+                for (Player player : song.getPlayers()) {
+                    if (!playingSong.containsKey(player)) {
+                        playingSong.put(player, 0);
+                    }
+
+                    playingSong.put(player, playingSong.get(player) + 1);
+                }
+            }
+
+        }
+
+        for (Player player : playerTable.getItems()) {
+            player.applyPlaySong(playingSong);
+        }
+        playerTable.refresh();
+
+        return true;
     }
 
     private void clearHighlights() {
@@ -421,13 +445,13 @@ public class PlannerControler implements Initializable {
         return column;
     }
 
-    private <T> void assignDataAdd(Button button, ObservableList<T> list, Supplier<T> newInstance) {
+    private <T> void assignButtonAdd(Button button, ObservableList<T> list, Supplier<T> newInstance) {
         button.setOnMouseClicked((event) -> {
             list.add(newInstance.get());
         });
     }
 
-    private <T> void assignDataDelete(Button button, ObservableList<T> list, TableView.TableViewSelectionModel<T> selectionModel) {
+    private <T> void assignButtonDelete(Button button, ObservableList<T> list, TableView.TableViewSelectionModel<T> selectionModel) {
         button.setOnMouseClicked((event) -> {
             list.remove(selectionModel.getSelectedItem());
         });

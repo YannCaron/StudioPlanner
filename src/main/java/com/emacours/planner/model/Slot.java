@@ -6,7 +6,6 @@
 package com.emacours.planner.model;
 
 import com.emacours.planner.algorithm.CompatibilityGraph;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
