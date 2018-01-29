@@ -9,3 +9,4 @@
 2h - Improve GUI
 2h - Planning multi selection
 2h30 - Menu management
+2h - Clipboard and help

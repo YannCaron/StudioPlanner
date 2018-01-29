@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -34,8 +35,14 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ListChangeListener.Change;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.print.PageLayout;
+import javafx.print.PageOrientation;
+import javafx.print.Paper;
+import javafx.print.Printer;
+import javafx.print.PrinterJob;
 import javafx.scene.Scene;
 import javafx.scene.control.Accordion;
 import javafx.scene.control.Alert;
@@ -48,22 +55,24 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableColumn.CellEditEvent;
 import javafx.scene.control.TablePosition;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.ComboBoxTableCell;
-import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.image.ImageView;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.transform.Scale;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Callback;
-import javafx.util.converter.DefaultStringConverter;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 import org.simpleframework.xml.strategy.CycleStrategy;
@@ -115,7 +124,7 @@ public class PlannerControler implements Constants, Initializable {
     private TableView<Song> songTable;
 
     @FXML
-    private Button clipboardSongButton, addSongButton, deleteSongButton;
+    private Button addSongButton, deleteSongButton, clearSongButton, clipboardSongButton, printSongButton;
 
     @FXML
     private Spinner durationSpinner;
@@ -127,7 +136,7 @@ public class PlannerControler implements Constants, Initializable {
     private TableView<Slot> planningTable;
 
     @FXML
-    private Button clipboardPlanningButton;
+    private Button clipboardPlanningButton, printPlanningButton;
 
     @FXML
     private Accordion accord;
@@ -140,10 +149,6 @@ public class PlannerControler implements Constants, Initializable {
 
     @FXML
     private Tab songTab, planningTab;
-
-    public DataModel getModel() {
-        return model;
-    }
 
     public PlannerControler() {
         this.model = new DataModel();
@@ -163,8 +168,8 @@ public class PlannerControler implements Constants, Initializable {
 
         // song
         songTable.setEditable(true);
+        songTable.getSelectionModel().setCellSelectionEnabled(true);
         addEditableStringTableColumn("Name", songTable, (t) -> t.getNameProperty(), (t, v) -> t.setName(v));
-        addEditableObjectTableColumn("Prefered studio", songTable, model.getStudios(), (t) -> t.getPreferedStudioProperty(), (t, v) -> t.setPreferedStudio(v));
         addEditableStringTableColumn("Remark", songTable, (t) -> t.getCommentProperty(), (t, v) -> t.setComment(v));
 
         // player
@@ -173,30 +178,8 @@ public class PlannerControler implements Constants, Initializable {
         TableColumn<Player, String> lastNameColumn = addEditableStringTableColumn("Last name", playerTable, (t) -> t.getLastNameProperty(), (t, v) -> t.setLastName(v));
         addEditableBooleanTableColumn("Loose", playerTable, (t) -> t.getLooseProperty(), (t, v) -> t.setLoose(v));
 
-        Callback<TableColumn<Player, String>, TableCell<Player, String>> playerCellCallback = (TableColumn<Player, String> param) -> new TextFieldTableCell<Player, String>(new DefaultStringConverter()) {
-
-            @Override
-            public void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(item);
-
-                if (getTableRow() == null || getTableRow().getIndex() == -1 || getTableRow().getIndex() >= getTableView().getItems().size()) {
-                    return;
-                }
-
-                Player player = getTableView().getItems().get(getTableRow().getIndex());
-                if (player.getPlaySong() > 1) {
-                    setStyle(NOTICE_STYLE);
-                } else if (player.getPlaySong() == 1) {
-                    setStyle(NOTICE_STYLE_LIGHT);
-                } else {
-                    setStyle("");
-                }
-            }
-        };
-
-        firstNameColumn.setCellFactory(playerCellCallback);
-        lastNameColumn.setCellFactory(playerCellCallback);
+        firstNameColumn.setCellFactory(PlayerEditCell.forTableColumn());
+        lastNameColumn.setCellFactory(PlayerEditCell.forTableColumn());
 
         // planning
         planningTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
@@ -223,30 +206,58 @@ public class PlannerControler implements Constants, Initializable {
         playerTable.setOnKeyPressed(this::this_onEscape);
 
         assignButtonAdd(addStudioButton, () -> model.getStudios(), () -> new Studio("new"));
-        assignButtonDelete(deleteStudioButton, () -> model.getStudios(), studioTable.getSelectionModel());
+        assignButtonDelete(deleteStudioButton, () -> model.getStudios(), studioTable.getSelectionModel(), (s) -> true);
 
         assignButtonAdd(addInstrumentButton, () -> model.getInstruments(), () -> new Instrument("new"));
-        assignButtonDelete(deleteInstrumentButton, () -> model.getInstruments(), instrumentTable.getSelectionModel());
+        assignButtonDelete(deleteInstrumentButton, () -> model.getInstruments(), instrumentTable.getSelectionModel(), (i) -> {
+            for (Song song : songTable.getItems()) {
+                if (songColumns.get(i).getCellObservableValue(song).getValue() != null) {
+                    return false;
+                }
+            }
+            return true;
+        });
 
         assignButtonAdd(addSongButton, () -> model.getSongs(), () -> new Song("new"));
-        assignButtonDelete(deleteSongButton, () -> model.getSongs(), songTable.getSelectionModel());
+        assignButtonDelete(deleteSongButton, () -> model.getSongs(), songTable.getSelectionModel(), (s) -> true);
 
         assignButtonAdd(addPlayerButton, () -> model.getPlayers(), () -> new Player("new", "", false));
-        assignButtonDelete(deletePlayerButton, () -> model.getPlayers(), playerTable.getSelectionModel());
+        assignButtonDelete(deletePlayerButton, () -> model.getPlayers(), playerTable.getSelectionModel(), (p) -> {
+            for (Song song : songTable.getItems()) {
+                for (Player player : song.getPlayers()) {
+                    if (player == p) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        });
 
         clipboardSongButton.setOnAction(this::clipboardSongButton_onAction);
         clipboardPlanningButton.setOnAction(this::clipboardPlanningButton_onAction);
 
+        printSongButton.setOnAction(this::printSongButton_onAction);
+        printPlanningButton.setOnAction(this::printPlanningButton_onAction);
+
+        clearSongButton.setOnAction(this::clearSongButton_onAction);
+
         songTable.setOnKeyPressed((event) -> {
-            if (event.getCode() == KeyCode.ESCAPE) {
+            if (event.getCode() == KeyCode.DELETE || event.getCode() == KeyCode.ESCAPE) {
                 if (songTable.getSelectionModel().getSelectedCells().size() <= 0) {
                     return;
                 }
                 int row = songTable.getSelectionModel().getSelectedCells().get(0).getRow();
                 int col = songTable.getSelectionModel().getSelectedCells().get(0).getColumn();
+                TableColumn column = songTable.getSelectionModel().getSelectedCells().get(0).getTableColumn();
+                Instrument instrument = (Instrument) column.getUserData();
+                Player player = songTable.getItems().get(row).getPlayerProperty(instrument).get();
+                System.out.println(player);
                 if (col == 1) {
                     songTable.getItems().get(row).setPreferedStudio(null);
+                } else {
+                    songTable.getItems().get(row).removePlayer(player);
                 }
+                songTable.refresh();
             }
         });
 
@@ -341,16 +352,16 @@ public class PlannerControler implements Constants, Initializable {
             Function<T, SimpleStringProperty> propertyAccessor,
             BiConsumer<T, String> propertySetter) {
 
+        EventHandler<CellEditEvent<T, String>> editEvent = (CellEditEvent<T, String> event) -> {
+            propertySetter.accept(((T) event.getTableView().getItems()
+                    .get(event.getTablePosition().getRow())), event.getNewValue());
+        };
+
         TableColumn<T, String> column = new TableColumn(columnName);
-        //column.setMinWidth(50);
         column.setEditable(true);
         column.setCellValueFactory(cellData -> propertyAccessor.apply(cellData.getValue()));
-        column.setCellFactory(TextFieldTableCell.<T>forTableColumn());
-        column.setOnEditCommit(
-                (TableColumn.CellEditEvent<T, String> t) -> {
-                    propertySetter.accept(((T) t.getTableView().getItems()
-                            .get(t.getTablePosition().getRow())), t.getNewValue());
-                });
+        column.setCellFactory(EditCell.<T>forTableColumn());
+        column.setOnEditCommit(editEvent);
 
         tableView.getColumns().add(column);
         return column;
@@ -388,17 +399,15 @@ public class PlannerControler implements Constants, Initializable {
         return column;
     }
 
-    private <T, U> TableColumn<T, U> addEditableObjectTableColumn(String columnName, TableView<T> tableView, ObservableList<U> list,
+    private <T, U> TableColumn<T, U> addEditableObjectTableColumn(String columnName, TableView<T> tableView, Supplier<ObservableList<U>> listSupplier,
             Function<T, SimpleObjectProperty<U>> propertyAccessor,
-            BiConsumer<T, U> propertySetter/*,
-            Comparator<U> comparator*/) {
+            BiConsumer<T, U> propertySetter) {
 
         TableColumn<T, U> column = new TableColumn(columnName);
-        //column.setMinWidth(100);
         column.setEditable(true);
         column.setCellValueFactory(cellData -> propertyAccessor.apply(cellData.getValue()));
-        //FXCollections.sort(list, comparator);
-        column.setCellFactory(ComboBoxTableCell.forTableColumn(list));
+        column.setCellFactory(ComboBoxTableCell.forTableColumn(listSupplier.get()));
+
         column.setOnEditCommit(
                 (TableColumn.CellEditEvent<T, U> t) -> {
                     propertySetter.accept(((T) t.getTableView().getItems()
@@ -428,9 +437,16 @@ public class PlannerControler implements Constants, Initializable {
         });
     }
 
-    private <T> void assignButtonDelete(Button button, Supplier<ObservableList<T>> getList, TableView.TableViewSelectionModel<T> selectionModel) {
+    private <T> void assignButtonDelete(Button button, Supplier<ObservableList<T>> getList, TableView.TableViewSelectionModel<T> selectionModel, Predicate<T> predicate) {
         button.setOnMouseClicked((event) -> {
-            getList.get().remove(selectionModel.getSelectedItem());
+            if (predicate.test(selectionModel.getSelectedItem())) {
+                getList.get().remove(selectionModel.getSelectedItem());
+            } else {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Integrity violation");
+                alert.setHeaderText(String.format("[%s] is already assigned !\nCannot be deleted !", selectionModel.getSelectedItem()));
+                alert.showAndWait();
+            }
         });
     }
 
@@ -449,11 +465,8 @@ public class PlannerControler implements Constants, Initializable {
                 int t = i / model.getStudioDomainSize();
 
                 if (s == 0) {
-                    if (slot != null && !slot.isEmpty()) {
-                        slots.add(slot);
-                    }
-
                     slot = new Slot("Slot " + (t + 1));
+                    slots.add(slot);
                 }
 
                 if (song == null) {
@@ -471,12 +484,15 @@ public class PlannerControler implements Constants, Initializable {
             mainPane.getSelectionModel().select(planningTab);
 
         }
-        
+
         leftLabel.setText(String.format("Solution found in [%d] steps !", planner.getStepCount()));
 
     }
 
     private void clearSongColumns() {
+        if (songTable.getColumns().size() >= 3) {
+            songTable.getColumns().remove(2);
+        }
         for (Instrument instrument : songColumns.keySet()) {
             songTable.getColumns().remove(songColumns.get(instrument));
         }
@@ -484,8 +500,14 @@ public class PlannerControler implements Constants, Initializable {
     }
 
     private void createSongColumns() {
+        addEditableObjectTableColumn("Prefered studio", songTable, () -> model.getStudios(), (t) -> t.getPreferedStudioProperty(), (t, v) -> t.setPreferedStudio(v));
+
         for (Instrument instrument : model.getInstruments()) {
-            TableColumn col = addEditableObjectTableColumn(instrument.getName(), songTable, model.getPlayers(), (t) -> t.getPlayerProperty(instrument), (t, v) -> t.addPlayer(instrument, v));
+            TableColumn col = addEditableObjectTableColumn(instrument.getName(), songTable, () -> model.getPlayers(), (t) -> t.getPlayerProperty(instrument), (t, v) -> t.addPlayer(instrument, v));
+            instrument.getNameProperty().addListener((observable, oldValue, newValue) -> {
+                col.setText(newValue);
+            });
+            col.setUserData(instrument);
             songColumns.put(instrument, col);
         }
     }
@@ -569,11 +591,45 @@ public class PlannerControler implements Constants, Initializable {
         }
     }
 
+    private void printTable(TableView table) {
+        Rectangle rect = new Rectangle(table.getWidth(), table.getHeight());
+        table.setClip(rect);
+        WritableImage writableImage;
+        writableImage = new WritableImage((int) table.getWidth(),
+                (int) table.getHeight());
+        table.snapshot(null, writableImage);
+        ImageView imageView = new ImageView(writableImage);
+        table.setClip(null);
+
+        Printer printer = Printer.getDefaultPrinter();
+        PageLayout pageLayout = printer.createPageLayout(Paper.A4, PageOrientation.LANDSCAPE, Printer.MarginType.DEFAULT);
+        double scaleX = pageLayout.getPrintableWidth() / imageView.getBoundsInParent().getWidth();
+        double scaleY = pageLayout.getPrintableHeight() / imageView.getBoundsInParent().getHeight();
+        double scale = Math.min(scaleX, scaleY);
+        imageView.getTransforms().add(new Scale(scale, scale));
+
+        PrinterJob job = PrinterJob.createPrinterJob();
+        if (job != null) {
+            boolean successPrintDialog = job.showPrintDialog(stage.getOwner());
+            if (successPrintDialog) {
+                boolean success = job.printPage(pageLayout, imageView);
+                if (success) {
+                    job.endJob();
+                }
+            }
+        }
+    }
+
     protected void openMenu_onAction(ActionEvent event) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Open Planner File");
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("EMA studio planner file", FILE_CHOSER_EXTENSION));
-        fileChooser.setInitialDirectory(new File(Configuration.getInstance().currentPath.get()));
+
+        File directory = new File(Configuration.getInstance().currentPath.get());
+        if (directory.exists()) {
+            fileChooser.setInitialDirectory(directory);
+        }
+
         File file = fileChooser.showOpenDialog(stage);
 
         if (file != null) {
@@ -671,6 +727,18 @@ public class PlannerControler implements Constants, Initializable {
         rightLabel.setText("Press [ctrl] + v to paste in Excel.");
     }
 
+    protected void printSongButton_onAction(ActionEvent event) {
+        printTable(songTable);
+    }
+
+    protected void printPlanningButton_onAction(ActionEvent event) {
+        printTable(planningTable);
+    }
+
+    protected void clearSongButton_onAction(ActionEvent event) {
+        model.getSongs().clear();
+    }
+
     protected void this_onEscape(KeyEvent event) {
         if (event.getCode() == KeyCode.ESCAPE) {
             clearHighlights();
@@ -682,7 +750,10 @@ public class PlannerControler implements Constants, Initializable {
         while (change.next()) {
 
             for (Instrument instrument : change.getAddedSubList()) {
-                TableColumn col = addEditableObjectTableColumn(instrument.getName(), songTable, getModel().getPlayers(), (t) -> t.getPlayerProperty(instrument), (t, v) -> t.addPlayer(instrument, v));
+                TableColumn col = addEditableObjectTableColumn(instrument.getName(), songTable, () -> model.getPlayers(), (t) -> t.getPlayerProperty(instrument), (t, v) -> t.addPlayer(instrument, v));
+                instrument.getNameProperty().addListener((observable, oldValue, newValue) -> {
+                    col.setText(newValue);
+                });
                 songColumns.put(instrument, col);
             }
 

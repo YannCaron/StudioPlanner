@@ -115,6 +115,17 @@ public class Song {
     public void addPlayer(Instrument instrument, Player player) {
         instrumentPlayers.put(instrument, player);
     }
+    
+    public void removePlayer(Player player) {
+        Instrument foundInstrument = null;
+        for (Instrument instrument : instrumentPlayers.keySet()) {
+            if (instrumentPlayers.get(instrument) == player){
+                foundInstrument = instrument;
+            }
+        }
+        
+        instrumentPlayers.remove(foundInstrument);
+    }
 
     public Collection<Player> getPlayers() {
         return instrumentPlayers.values();

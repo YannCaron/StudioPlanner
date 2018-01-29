@@ -42,7 +42,7 @@ public class Planning {
             }
 
             if (!slotHasData) {
-                return (t+1) * nt;
+                return t * nt;
             }
         }
         

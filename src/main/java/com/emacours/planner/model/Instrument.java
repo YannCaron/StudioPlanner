@@ -39,7 +39,7 @@ public class Instrument {
 
     @Override
     public String toString() {
-        return "Instrument{" + "name=" + nameProperty.get() + '}';
+        return nameProperty.get();
     }
 
 }
