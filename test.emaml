@@ -42,6 +42,23 @@
    <instrument _id="41" name="Lead chant"/>
    <instrument _id="42" name="Chant 2 / choeurs"/>
    <song _id="43" name="1"/>
-   <song _id="44" name="2"/>
+   <song _id="44" name="2">
+      <entry>
+         <instrument _ref="38"/>
+         <player _ref="12"/>
+      </entry>
+      <entry>
+         <instrument _ref="36"/>
+         <player _ref="11"/>
+      </entry>
+      <entry>
+         <instrument _ref="40"/>
+         <player _ref="16"/>
+      </entry>
+      <entry>
+         <instrument _ref="37"/>
+         <player _ref="13"/>
+      </entry>
+   </song>
    <song _id="45" name="3"/>
 </dataModel>

@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.Stack;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -65,14 +66,16 @@ import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.Dragboard;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.input.TransferMode;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.transform.Scale;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.util.Callback;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 import org.simpleframework.xml.strategy.CycleStrategy;
@@ -174,8 +177,14 @@ public class PlannerControler implements Constants, Initializable {
 
         // player
         playerTable.setEditable(true);
-        TableColumn<Player, String> firstNameColumn = addEditableStringTableColumn("First name", playerTable, (t) -> t.getFirstNameProperty(), (t, v) -> t.setFirstName(v));
-        TableColumn<Player, String> lastNameColumn = addEditableStringTableColumn("Last name", playerTable, (t) -> t.getLastNameProperty(), (t, v) -> t.setLastName(v));
+        TableColumn<Player, String> firstNameColumn = addEditableStringTableColumn("First name", playerTable, (t) -> t.getFirstNameProperty(), (t, v) -> {
+            t.setFirstName(v);
+            songTable.refresh();
+        });
+        TableColumn<Player, String> lastNameColumn = addEditableStringTableColumn("Last name", playerTable, (t) -> t.getLastNameProperty(), (t, v) -> {
+            t.setLastName(v);
+            songTable.refresh();
+        });
         addEditableBooleanTableColumn("Loose", playerTable, (t) -> t.getLooseProperty(), (t, v) -> t.setLoose(v));
 
         firstNameColumn.setCellFactory(PlayerEditCell.forTableColumn());
@@ -241,6 +250,11 @@ public class PlannerControler implements Constants, Initializable {
 
         clearSongButton.setOnAction(this::clearSongButton_onAction);
 
+        // drag and drop
+        studioTable.setOnDragDetected(this::studio_onDragDetected);
+        playerTable.setOnDragDetected(this::player_onDragDetected);
+        songTable.setOnDragDetected(this::song_onDragDetected);
+
         songTable.setOnKeyPressed((event) -> {
             if (event.getCode() == KeyCode.DELETE || event.getCode() == KeyCode.ESCAPE) {
                 if (songTable.getSelectionModel().getSelectedCells().size() <= 0) {
@@ -250,12 +264,10 @@ public class PlannerControler implements Constants, Initializable {
                 int col = songTable.getSelectionModel().getSelectedCells().get(0).getColumn();
                 TableColumn column = songTable.getSelectionModel().getSelectedCells().get(0).getTableColumn();
                 Instrument instrument = (Instrument) column.getUserData();
-                Player player = songTable.getItems().get(row).getPlayerProperty(instrument).get();
-                System.out.println(player);
                 if (col == 1) {
                     songTable.getItems().get(row).setPreferedStudio(null);
                 } else {
-                    songTable.getItems().get(row).removePlayer(player);
+                    songTable.getItems().get(row).removePlayer(instrument);
                 }
                 songTable.refresh();
             }
@@ -406,7 +418,16 @@ public class PlannerControler implements Constants, Initializable {
         TableColumn<T, U> column = new TableColumn(columnName);
         column.setEditable(true);
         column.setCellValueFactory(cellData -> propertyAccessor.apply(cellData.getValue()));
-        column.setCellFactory(ComboBoxTableCell.forTableColumn(listSupplier.get()));
+        column.setCellFactory((TableColumn<T, U> param) -> {
+            ComboBoxTableCell cell = new ComboBoxTableCell(listSupplier.get());
+            cell.setOnDragOver((event) -> {
+                this.songCell_onDragOver(event, cell);
+            });
+            cell.setOnDragDropped((event) -> {
+                this.songCell_onDragDropped(event, cell);
+            });
+            return cell;
+        });
 
         column.setOnEditCommit(
                 (TableColumn.CellEditEvent<T, U> t) -> {
@@ -763,6 +784,107 @@ public class PlannerControler implements Constants, Initializable {
                 songTable.getColumns().remove(col);
             }
         }
+    }
+
+    public static final String DRAG_AND_DROP_KEY_PLAYER = "PLAYER";
+    public static final String DRAG_AND_DROP_KEY_STUDIO = "STUDIO";
+
+    protected void studio_onDragDetected(MouseEvent event) {
+        Dragboard db = playerTable.startDragAndDrop(TransferMode.COPY);
+        ClipboardContent content = new ClipboardContent();
+
+        content.putString(DRAG_AND_DROP_KEY_STUDIO);
+        Studio studio = studioTable.getSelectionModel().getSelectedItem();
+        dragAndDropStudio = studio;
+
+        db.setContent(content);
+        event.consume();
+    }
+
+    protected void player_onDragDetected(MouseEvent event) {
+        Dragboard db = playerTable.startDragAndDrop(TransferMode.COPY);
+        ClipboardContent content = new ClipboardContent();
+
+        content.putString(DRAG_AND_DROP_KEY_PLAYER);
+        Player player = playerTable.getSelectionModel().getSelectedItem();
+        dragAndDropPlayer = player;
+
+        db.setContent(content);
+        event.consume();
+    }
+
+    protected void song_onDragDetected(MouseEvent event) {
+        Dragboard db = playerTable.startDragAndDrop(TransferMode.MOVE);
+        ClipboardContent content = new ClipboardContent();
+
+        TableColumn column = songTable.getSelectionModel().getSelectedCells().get(0).getTableColumn();
+        Song song = songTable.getSelectionModel().getSelectedItem();
+
+        if (column.getUserData() instanceof Instrument) {
+            content.putString(DRAG_AND_DROP_KEY_PLAYER);
+
+            Instrument instrument = (Instrument) column.getUserData();
+            Player player = song.getPlayerProperty(instrument).get();
+            dragAndDropPlayer = player;
+            song.removePlayer(instrument);
+        } else {
+            content.putString(DRAG_AND_DROP_KEY_STUDIO);
+
+            Studio studio = song.getPreferedStudio();
+            dragAndDropStudio = studio;
+            song.setPreferedStudio(null);
+        }
+
+        db.setContent(content);
+        event.consume();
+    }
+
+    private Player dragAndDropPlayer;
+    private Studio dragAndDropStudio;
+
+    protected void songCell_onDragOver(DragEvent event, ComboBoxTableCell cell) {
+        Dragboard db = event.getDragboard();
+        if (db.hasString() && db.getString().equals(DRAG_AND_DROP_KEY_PLAYER)
+                || db.getString().equals(DRAG_AND_DROP_KEY_STUDIO)) {
+            event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
+        }
+        event.consume();
+    }
+
+    protected void songCell_onDragDropped(DragEvent event, ComboBoxTableCell cell) {
+        Dragboard db = event.getDragboard();
+        boolean success = false;
+        if (db.hasString()) {
+            int row = cell.getTableRow().getIndex();
+            if (row < songTable.getItems().size()) {
+                Song song = songTable.getItems().get(row);
+
+                if (event.getTransferMode() == TransferMode.COPY) {
+                    if (db.getString().equals(DRAG_AND_DROP_KEY_PLAYER) && dragAndDropPlayer != null) {
+
+                        Instrument instrument = (Instrument) cell.getTableColumn().getUserData();
+
+                        song.addPlayer(instrument, dragAndDropPlayer);
+                        success = true;
+                    } else if (db.getString().equals(DRAG_AND_DROP_KEY_STUDIO) && dragAndDropStudio != null) {
+                        song.setPreferedStudio(dragAndDropStudio);
+                        success = true;
+                    }
+                } else {
+                    if (db.getString().equals(DRAG_AND_DROP_KEY_PLAYER) && dragAndDropPlayer != null) {
+                        Instrument instrument = (Instrument) cell.getTableColumn().getUserData();
+                        song.addPlayer(instrument, dragAndDropPlayer);
+                        success = true;
+                    } else if (db.getString().equals(DRAG_AND_DROP_KEY_STUDIO) && dragAndDropStudio != null) {
+                        song.setPreferedStudio(dragAndDropStudio);
+                        success = true;
+                    }
+                }
+            }
+            songTable.refresh();
+        }
+        event.setDropCompleted(success);
+        event.consume();
     }
 
 }
