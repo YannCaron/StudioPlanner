@@ -20,7 +20,7 @@ import org.simpleframework.xml.Root;
  */
 @Root(strict = false)
 public class Song {
-    
+
     private final SimpleStringProperty nameProperty;
     private final SimpleStringProperty commentProperty;
     private int constraint = 0;
@@ -28,45 +28,45 @@ public class Song {
     // constraints
     @ElementMap(name = "instrumentPlayers", inline = true, required = false)
     private final HashMap<Instrument, Player> instrumentPlayers;
-    
+
     private SimpleObjectProperty<Studio> preferedStudioProperty;
-    
+
     @Attribute
     public String getName() {
         return nameProperty.get();
     }
-    
+
     @Attribute
     public void setName(String name) {
         this.nameProperty.set(name);
     }
-    
+
     public SimpleStringProperty getNameProperty() {
         return nameProperty;
     }
-    
+
     @Attribute(required = false)
     public String getComment() {
         return commentProperty.get();
     }
-    
+
     @Attribute(required = false)
     public void setComment(String name) {
         this.commentProperty.set(name);
     }
-    
+
     public SimpleStringProperty getCommentProperty() {
         return commentProperty;
     }
-    
+
     public void calculateConstraint(int score, int studioScore) {
         constraint = score + (hasPreferedStudio() ? studioScore : 0);
     }
-    
+
     public int getConstraint() {
         return constraint;
     }
-    
+
     public Song(@Attribute(name = "name") String name,
             @Attribute(name = "comment", required = false) String comment,
             @Element(name = "preferedStudio", required = false) Studio preferedStudio,
@@ -79,14 +79,14 @@ public class Song {
         }
         this.instrumentPlayers = instrumentPlayers;
     }
-    
+
     public Song(String name) {
         this.nameProperty = new SimpleStringProperty(name);
         this.commentProperty = new SimpleStringProperty();
         this.preferedStudioProperty = new SimpleObjectProperty<>();
         instrumentPlayers = new HashMap<>();
     }
-    
+
     @Element(name = "preferedStudio", required = false)
     public Studio getPreferedStudio() {
         if (preferedStudioProperty == null) {
@@ -94,7 +94,7 @@ public class Song {
         }
         return preferedStudioProperty.get();
     }
-    
+
     @Element(name = "preferedStudio", required = false)
     public void setPreferedStudio(Studio preferedStudio) {
         if (preferedStudioProperty == null) {
@@ -103,38 +103,39 @@ public class Song {
             this.preferedStudioProperty.set(preferedStudio);
         }
     }
-    
+
     public SimpleObjectProperty<Studio> getPreferedStudioProperty() {
         return preferedStudioProperty;
     }
-    
+
     public boolean hasPreferedStudio() {
         return preferedStudioProperty != null && preferedStudioProperty.get() != null;
     }
-    
+
     public void addPlayer(Instrument instrument, Player player) {
         instrumentPlayers.put(instrument, player);
     }
-    
+
     public void removePlayer(Instrument instrument) {
         instrumentPlayers.remove(instrument);
     }
-    
+
     public Collection<Player> getPlayers() {
         return instrumentPlayers.values();
     }
-    
+
     public SimpleObjectProperty<Player> getPlayerProperty(final Instrument instrument) {
         SimpleObjectProperty<Player> property = new SimpleObjectProperty<>(instrumentPlayers.get(instrument));
-        /*property.addListener((observable, oldValue, newValue) -> {
-            addPlayer(instrument, newValue);
-        });*/
         return property;
     }
-    
+
+    public Player getPlayer(final Instrument instrument) {
+        return instrumentPlayers.get(instrument);
+    }
+
     @Override
     public String toString() {
         return nameProperty.get();
     }
-    
+
 }
