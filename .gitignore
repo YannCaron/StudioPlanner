@@ -7,6 +7,7 @@
 .gradle/
 /.nb-gradle-properties
 .nb-gradle/
+web_files/
 
 # Directories left from old Ant project
 /build/
