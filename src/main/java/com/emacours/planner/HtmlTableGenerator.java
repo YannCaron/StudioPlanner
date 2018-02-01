@@ -33,7 +33,7 @@ import org.w3c.dom.Element;
  *
  * @author cyann
  */
-public class HtmlTableGenerator<T> {
+public class HtmlTableGenerator<T> implements Constants {
 
     private static final Logger LOGGER = Logger.getLogger(HtmlTableGenerator.class.getName());
 
@@ -81,7 +81,7 @@ public class HtmlTableGenerator<T> {
         columns.add(column);
     }
 
-    private String loadCss() {
+    /*private String loadCss() {
         String data = "";
         try {
             Path path = Paths.get(getClass().getClassLoader().getResource("print.css").toURI());
@@ -93,7 +93,7 @@ public class HtmlTableGenerator<T> {
 
         return data;
 
-    }
+    }*/
 
     public String buildContent() {
         try {
@@ -110,7 +110,7 @@ public class HtmlTableGenerator<T> {
             html.appendChild(head);
 
             Element style = doc.createElement("style");
-            style.setTextContent(loadCss());
+            style.setTextContent(FileUtils.loadRessource(FILE_PRINT_CSS));
             head.appendChild(style);
 
             Element body = doc.createElement("body");

@@ -18,7 +18,7 @@ import javafx.stage.Stage;
  *
  * @author cyann
  */
-public class FXMain extends Application {
+public class FXMain extends Application implements Constants {
 
     @Override
     public void start(Stage primaryStage) throws IOException {
@@ -29,8 +29,8 @@ public class FXMain extends Application {
         PlannerControler controler = loader.getController();
         controler.initializeEvents(primaryStage, scene);
 
-        primaryStage.setTitle("Studio Planner");
-        primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/icon-128.png")));
+        primaryStage.setTitle(APP_NAME);
+        primaryStage.getIcons().add(new Image(getClass().getResourceAsStream(FILE_ICON)));
         primaryStage.setScene(scene);
 
         primaryStage.show();
