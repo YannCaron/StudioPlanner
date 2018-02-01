@@ -85,6 +85,8 @@ public class PlannerControler implements Constants, Initializable {
     public static final String NOTICE_STYLE = "-fx-background-color:#428aa3ff";
     public static final String NOTICE_STYLE_LIGHT = "-fx-background-color:#b7deedff";
     private static final Song DUMMY_SONG = new Song("-");
+    public static final String DRAG_AND_DROP_KEY_PLAYER = "PLAYER";
+    public static final String DRAG_AND_DROP_KEY_STUDIO = "STUDIO";
 
     private static final Logger LOGGER = Logger.getLogger(PlannerControler.class.getName());
     private DataModel model;
@@ -519,13 +521,18 @@ public class PlannerControler implements Constants, Initializable {
         addEditableObjectTableColumn("Prefered studio", songTable, () -> model.getStudios(), (t) -> t.getPreferedStudioProperty(), (t, v) -> t.setPreferedStudio(v));
 
         for (Instrument instrument : model.getInstruments()) {
-            TableColumn col = addEditableObjectTableColumn(instrument.getName(), songTable, () -> model.getPlayers(), (t) -> t.getPlayerProperty(instrument), (t, v) -> t.addPlayer(instrument, v));
-            instrument.getNameProperty().addListener((observable, oldValue, newValue) -> {
-                col.setText(newValue);
-            });
-            col.setUserData(instrument);
-            songColumns.put(instrument, col);
+            createSongColumn(instrument);
         }
+    }
+
+    private void createSongColumn(Instrument instrument) {
+        TableColumn col = addEditableObjectTableColumn(instrument.getName(), songTable, () -> model.getPlayers(), (t) -> t.getPlayerProperty(instrument), (t, v) -> t.addPlayer(instrument, v));
+        instrument.getNameProperty().addListener((observable, oldValue, newValue) -> {
+            col.setText(newValue);
+        });
+        col.setUserData(instrument);
+        songColumns.put(instrument, col);
+
     }
 
     private void clearPlanning() {
@@ -781,15 +788,10 @@ public class PlannerControler implements Constants, Initializable {
     }
 
     protected void instruments_onChange(Change<? extends Instrument> change) {
-        System.out.println("CHANGED");
         while (change.next()) {
 
             for (Instrument instrument : change.getAddedSubList()) {
-                TableColumn col = addEditableObjectTableColumn(instrument.getName(), songTable, () -> model.getPlayers(), (t) -> t.getPlayerProperty(instrument), (t, v) -> t.addPlayer(instrument, v));
-                instrument.getNameProperty().addListener((observable, oldValue, newValue) -> {
-                    col.setText(newValue);
-                });
-                songColumns.put(instrument, col);
+                createSongColumn(instrument);
             }
 
             for (Instrument instrument : change.getRemoved()) {
@@ -799,9 +801,6 @@ public class PlannerControler implements Constants, Initializable {
             }
         }
     }
-
-    public static final String DRAG_AND_DROP_KEY_PLAYER = "PLAYER";
-    public static final String DRAG_AND_DROP_KEY_STUDIO = "STUDIO";
 
     protected void studio_onDragDetected(MouseEvent event) {
         Dragboard db = playerTable.startDragAndDrop(TransferMode.COPY);
