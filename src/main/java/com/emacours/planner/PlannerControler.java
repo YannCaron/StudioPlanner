@@ -583,14 +583,16 @@ public class PlannerControler implements Constants, Initializable {
         Strategy strategy = new CycleStrategy("_id", "_ref");
         Serializer serializer = new Persister(strategy);
 
-        try {
-            this.model = serializer.read(DataModel.class, file);
-            loadModel();
+        if (file.exists()) {
+            try {
+                this.model = serializer.read(DataModel.class, file);
+                loadModel();
 
-            leftLabel.setText(String.format("File [%s] opened successfully !", file.getName()));
+                leftLabel.setText(String.format("File [%s] opened successfully !", file.getName()));
 
-        } catch (Exception ex) {
-            Logger.getLogger(PlannerControler.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (Exception ex) {
+                Logger.getLogger(PlannerControler.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
 
@@ -650,7 +652,12 @@ public class PlannerControler implements Constants, Initializable {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Save as Planner File");
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("EMA studio planner file", FILE_CHOSER_EXTENSION));
-        fileChooser.setInitialDirectory(new File(Configuration.getInstance().currentPath.get()));
+        
+        File directory = new File(Configuration.getInstance().currentPath.get());
+        if (directory.exists()) {
+            fileChooser.setInitialDirectory(directory);
+        }
+        
         File file = fileChooser.showSaveDialog(stage);
 
         if (file != null) {
